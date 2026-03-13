@@ -1,0 +1,2751 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vrushank's Tracker</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <style>
+        /* ============================================
+           VRUSHANK'S LEETCODE TRACKER - DARK THEME
+           ============================================
+           - Modern dark theme with white text
+           - Responsive layout with sidebar + main content
+           - Color-coded difficulty badges
+           - Progress tracking with visual indicators
+           ============================================ */
+
+        /* Global reset */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        /* Base styles - Dark background with white text */
+        html,
+        body {
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #000000;
+            color: #ffffff;
+        }
+
+        .app {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+        }
+
+        .sidebar {
+            width: 280px;
+            background: #0a0a0a;
+            border-right: 1px solid #1a1a1a;
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid #1a1a1a;
+        }
+
+        .sidebar-title {
+            font-size: 13px;
+            color: #ffffff;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 12px;
+        }
+
+        .overall-progress {
+            font-size: 24px;
+            color: #ffffff;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .overall-label {
+            font-size: 11px;
+            color: #cccccc;
+        }
+
+        .weeks-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 12px;
+        }
+
+        .weeks-list::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .weeks-list::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .weeks-list::-webkit-scrollbar-thumb {
+            background: #1a1a1a;
+            border-radius: 3px;
+        }
+
+        .week-item {
+            background: #050505;
+            border: 1px solid #1a1a1a;
+            border-radius: 6px;
+            padding: 12px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: all 0.4s ease;
+        }
+
+        .week-item:hover {
+            border-color: #2a2a2a;
+            background: #0f0f0f;
+        }
+
+        .week-item.active {
+            border-color: #3a3a3a;
+            background: #0f0f0f;
+        }
+
+        .week-number {
+            font-size: 11px;
+            color: #cccccc;
+            margin-bottom: 4px;
+        }
+
+        .week-title {
+            font-size: 13px;
+            color: #ffffff;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        .week-progress {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 11px;
+            color: #cccccc;
+        }
+
+        .week-bar {
+            height: 3px;
+            background: #1a1a1a;
+            border-radius: 2px;
+            overflow: hidden;
+            margin-top: 6px;
+        }
+
+        .week-bar-fill {
+            height: 100%;
+            background: #3a3a3a;
+            border-radius: 2px;
+            transition: width 0.6s ease;
+        }
+
+        .days-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 4px;
+            margin-top: 8px;
+        }
+
+        .day-dot {
+            width: 100%;
+            height: 4px;
+            background: #1a1a1a;
+            border-radius: 2px;
+            transition: all 0.4s ease;
+        }
+
+        .day-dot.completed {
+            background: #2a3a2a;
+        }
+
+        .day-dot.partial {
+            background: #3a3a2a;
+        }
+
+        .day-dot.active {
+            background: #4a4a4a;
+            height: 6px;
+        }
+
+        .main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .top-bar {
+            padding: 20px 40px;
+            background: #0a0a0a;
+            border-bottom: 1px solid #1a1a1a;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-shrink: 0;
+        }
+
+        .day-nav {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .nav-btn {
+            background: transparent;
+            border: 1px solid #2a2a2a;
+            color: #ffffff;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.4s ease;
+        }
+
+        .nav-btn:hover {
+            border-color: #4a4a4a;
+            color: #a0a0a0;
+            background: #121212;
+        }
+
+        .nav-btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        .day-label {
+            font-size: 15px;
+            color: #ffffff;
+            min-width: 140px;
+            text-align: center;
+        }
+
+        .stats {
+            display: flex;
+            gap: 30px;
+            font-size: 13px;
+            color: #cccccc;
+        }
+
+        .stat-item {
+            transition: color 0.4s ease;
+        }
+
+        .stat-item:hover {
+            color: #ffffff;
+        }
+
+        .stat-value {
+            color: #ffffff;
+            font-weight: 600;
+            margin-left: 6px;
+        }
+
+        .progress-bar {
+            height: 2px;
+            background: #1a1a1a;
+            position: relative;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: #3a3a3a;
+            transition: width 0.6s ease;
+            position: absolute;
+            left: 0;
+            top: 0;
+        }
+
+        .content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 30px 40px;
+            background: #000000;
+        }
+
+        .content::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .content::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .content::-webkit-scrollbar-thumb {
+            background: #2a2a2a;
+            border-radius: 4px;
+            transition: background 0.4s ease;
+        }
+
+        .content::-webkit-scrollbar-thumb:hover {
+            background: #3a3a3a;
+        }
+
+        .week-tag {
+            display: inline-block;
+            padding: 6px 12px;
+            background: #0f0f0f;
+            border: 1px solid #1a1a1a;
+            border-radius: 6px;
+            font-size: 12px;
+            color: #cccccc;
+            margin-bottom: 20px;
+            transition: all 0.4s ease;
+        }
+
+        .week-tag:hover {
+            border-color: #2a2a2a;
+            color: #ffffff;
+        }
+
+        .problem {
+            background: #0a0a0a;
+            border: 1px solid #1a1a1a;
+            border-radius: 8px;
+            padding: 24px;
+            margin-bottom: 16px;
+            transition: all 0.4s ease;
+            cursor: pointer;
+        }
+
+        .problem:hover {
+            border-color: #2a2a2a;
+            background: #0f0f0f;
+            transform: translateY(-1px);
+        }
+
+        .problem.completed {
+            border-color: #1a2a1a;
+            background: #0a120a;
+        }
+
+        .problem.completed:hover {
+            border-color: #2a3a2a;
+        }
+
+        .problem.needs-revision {
+            border-color: #3a2a1a;
+            background: #120a05;
+            box-shadow: 0 0 0 1px rgba(255, 165, 0, 0.3);
+        }
+
+        .problem.needs-revision:hover {
+            border-color: #4a3a2a;
+            box-shadow: 0 0 0 1px rgba(255, 165, 0, 0.5);
+        }
+
+        .problem-top {
+            display: flex;
+            align-items: flex-start;
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+
+        .checkbox {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            accent-color: #4a4a4a;
+            margin-top: 2px;
+            transition: all 0.4s ease;
+        }
+
+        .problem-header {
+            flex: 1;
+        }
+
+        .problem-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 6px;
+            flex-wrap: wrap;
+        }
+
+        .problem-id {
+            color: #cccccc;
+            font-size: 12px;
+            font-family: 'Courier New', monospace;
+        }
+
+        .problem-name {
+            color: #ffffff;
+            font-size: 15px;
+            font-weight: 500;
+            transition: color 0.4s ease;
+        }
+
+        .problem:hover .problem-name {
+            color: #ffffff;
+        }
+
+        .problem.completed .problem-name {
+            color: #cccccc;
+        }
+
+        .priority {
+            color: #ffd700;
+            font-size: 11px;
+        }
+
+        .difficulty {
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 500;
+            border: 1px solid;
+            transition: all 0.4s ease;
+        }
+
+        .difficulty.easy {
+            color: #90ee90;
+            border-color: #2a3a2a;
+            background: #0a120a;
+        }
+
+        .difficulty.medium {
+            color: #ffd700;
+            border-color: #3a3a2a;
+            background: #120f0a;
+        }
+
+        .difficulty.hard {
+            color: #ff6b6b;
+            border-color: #3a2a2a;
+            background: #120a0a;
+        }
+
+        .problem-desc {
+            background: #050505;
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 12px;
+            font-size: 13px;
+            line-height: 1.6;
+            color: #cccccc;
+            border: 1px solid #0f0f0f;
+            transition: all 0.4s ease;
+        }
+
+        .problem:hover .problem-desc {
+            border-color: #1a1a1a;
+        }
+
+        .problem-aim {
+            padding: 12px;
+            border-radius: 6px;
+            background: #0a0a0a;
+            border-left: 2px solid #2a2a2a;
+            margin-bottom: 12px;
+            transition: all 0.4s ease;
+        }
+
+        .problem:hover .problem-aim {
+            border-left-color: #3a3a3a;
+        }
+
+        .aim-label {
+            font-size: 11px;
+            color: #cccccc;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 6px;
+        }
+
+        .aim-text {
+            font-size: 13px;
+            line-height: 1.6;
+            color: #ffffff;
+        }
+
+        .problem-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 14px;
+            background: transparent;
+            border: 1px solid #2a2a2a;
+            border-radius: 6px;
+            color: #ffffff;
+            text-decoration: none;
+            font-size: 12px;
+            transition: all 0.4s ease;
+        }
+
+        .problem-link:hover {
+            border-color: #3a3a3a;
+            color: #ffffff;
+            background: #0a0a0a;
+            transform: translateX(2px);
+        }
+
+        .revision-container {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 12px;
+            padding: 8px 12px;
+            background: #050505;
+            border-radius: 6px;
+            border: 1px solid #0f0f0f;
+            transition: all 0.4s ease;
+        }
+
+        .problem:hover .revision-container {
+            border-color: #1a1a1a;
+        }
+
+        .revision-checkbox {
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+            accent-color: #ff8c00;
+            transition: all 0.4s ease;
+        }
+
+        .revision-label {
+            font-size: 12px;
+            color: #cccccc;
+            cursor: pointer;
+            user-select: none;
+            transition: color 0.4s ease;
+        }
+
+        .revision-label:hover {
+            color: #ffffff;
+        }
+
+        .notes-container {
+            margin-top: 12px;
+            padding: 12px;
+            background: #050505;
+            border-radius: 6px;
+            border: 1px solid #0f0f0f;
+            transition: all 0.4s ease;
+        }
+
+        .problem:hover .notes-container {
+            border-color: #1a1a1a;
+        }
+
+        .notes-label {
+            font-size: 11px;
+            color: #cccccc;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .notes-textarea {
+            width: 100%;
+            min-height: 80px;
+            background: #0a0a0a;
+            border: 1px solid #1a1a1a;
+            border-radius: 4px;
+            padding: 10px;
+            color: #ffffff;
+            font-size: 13px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            line-height: 1.6;
+            resize: vertical;
+            transition: all 0.4s ease;
+        }
+
+        .notes-textarea:focus {
+            outline: none;
+            border-color: #2a2a2a;
+            background: #0f0f0f;
+        }
+
+        .notes-textarea::placeholder {
+            color: #666666;
+        }
+
+        .notes-textarea::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .notes-textarea::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .notes-textarea::-webkit-scrollbar-thumb {
+            background: #1a1a1a;
+            border-radius: 3px;
+        }
+
+        .solution-button {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 14px;
+            background: transparent;
+            border: 1px solid #2a2a2a;
+            border-radius: 6px;
+            color: #ffffff;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.4s ease;
+            margin-top: 12px;
+        }
+
+        .solution-button:hover {
+            border-color: #3a3a3a;
+            background: #0a0a0a;
+            transform: translateX(2px);
+        }
+
+        .solution-panel {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            z-index: 1000;
+            backdrop-filter: blur(4px);
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        .solution-modal {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 95%;
+            max-width: 1000px;
+            max-height: 90vh;
+            background: #0a0a0a;
+            border: 1px solid #2a2a2a;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            animation: slideUp 0.3s ease;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translate(-50%, -45%);
+            }
+
+            to {
+                opacity: 1;
+                transform: translate(-50%, -50%);
+            }
+        }
+
+        .solution-modal-header {
+            padding: 20px 24px;
+            background: #050505;
+            border-bottom: 1px solid #1a1a1a;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .solution-modal-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #ffffff;
+        }
+
+        .solution-close-btn {
+            background: transparent;
+            border: none;
+            color: #888888;
+            font-size: 24px;
+            cursor: pointer;
+            padding: 0;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 4px;
+            transition: all 0.3s ease;
+        }
+
+        .solution-close-btn:hover {
+            background: #1a1a1a;
+            color: #ffffff;
+        }
+
+        .solution-modal-content {
+            max-height: calc(90vh - 80px);
+            overflow-y: auto;
+            padding: 0;
+        }
+
+        .solution-modal-content::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .solution-modal-content::-webkit-scrollbar-track {
+            background: #0a0a0a;
+        }
+
+        .solution-modal-content::-webkit-scrollbar-thumb {
+            background: #2a2a2a;
+            border-radius: 4px;
+        }
+
+        .solution-section {
+            padding: 16px;
+            border-bottom: 1px solid #0f0f0f;
+        }
+
+        .solution-section:last-child {
+            border-bottom: none;
+        }
+
+        .solution-header {
+            font-size: 12px;
+            color: #ffffff;
+            font-weight: 600;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .solution-code {
+            background: #0a0a0a;
+            border: 1px solid #1a1a1a;
+            border-radius: 6px;
+            padding: 16px;
+            overflow-x: auto;
+            font-family: 'Courier New', Consolas, monospace;
+            font-size: 13px;
+            line-height: 1.6;
+            color: #e0e0e0;
+            white-space: pre;
+        }
+
+        .solution-code::-webkit-scrollbar {
+            height: 6px;
+        }
+
+        .solution-code::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .solution-code::-webkit-scrollbar-thumb {
+            background: #1a1a1a;
+            border-radius: 3px;
+        }
+
+        .solution-explanation {
+            font-size: 13px;
+            line-height: 1.8;
+            color: #cccccc;
+            white-space: pre-line;
+        }
+
+        .revision-badge {
+            display: inline-block;
+            padding: 3px 8px;
+            background: rgba(255, 140, 0, 0.15);
+            border: 1px solid rgba(255, 140, 0, 0.3);
+            border-radius: 4px;
+            color: #ff8c00;
+            font-size: 11px;
+            font-weight: 500;
+            margin-left: auto;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 80px 20px;
+            color: #cccccc;
+        }
+
+        .empty-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+            opacity: 0.3;
+        }
+
+        .empty-text {
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        /* ============================================
+           DASHBOARD STYLES
+           ============================================ */
+
+        .dashboard-btn {
+            background: transparent;
+            border: 1px solid #2a2a2a;
+            color: #ffffff;
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.4s ease;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .dashboard-btn:hover {
+            border-color: #4a4a4a;
+            background: #121212;
+            background: #0a0a0a;
+            border-color: #3a3a3a;
+        }
+
+        /* ============================================
+           DASHBOARD MODAL & OVERLAY
+           ============================================ */
+        .dashboard-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            z-index: 1000;
+            backdrop-filter: blur(4px);
+        }
+
+        .dashboard-overlay.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .dashboard-container {
+            width: 100%;
+            max-width: 1400px;
+            height: 95vh;
+            max-height: 900px;
+            background: #0a0a0a;
+            border-radius: 12px;
+            border: 1px solid #1a1a1a;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+        }
+
+        .dashboard-header {
+            padding: 20px 32px;
+            background: linear-gradient(135deg, #0f0f0f 0%, #0a0a0a 100%);
+            border-bottom: 1px solid #1a1a1a;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-shrink: 0;
+        }
+
+        .dashboard-title {
+            font-size: 24px;
+            font-weight: 600;
+            color: #ffffff;
+            letter-spacing: -0.5px;
+        }
+
+        .dashboard-close-btn {
+            background: transparent;
+            border: 1px solid #2a2a2a;
+            color: #888888;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .dashboard-close-btn:hover {
+            background: #1a1a1a;
+            color: #ffffff;
+            border-color: #3a3a3a;
+        }
+
+        /* Dashboard Grid Layout */
+        .dashboard-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 24px 32px;
+        }
+
+        .dashboard-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+            max-width: 100%;
+        }
+
+        /* Stats Row */
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #0f0f0f 0%, #0a0a0a 100%);
+            border: 1px solid #1a1a1a;
+            border-radius: 8px;
+            padding: 20px;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+            border-color: #2a2a2a;
+        }
+
+        .stat-card-label {
+            font-size: 11px;
+            color: #888888;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        .stat-card-value {
+            font-size: 28px;
+            font-weight: 700;
+            color: #ffffff;
+            margin-bottom: 4px;
+            letter-spacing: -0.5px;
+        }
+
+        .stat-card-detail {
+            font-size: 13px;
+            color: #4a7c59;
+            font-weight: 500;
+        }
+
+        /* Charts Row */
+        .charts-row {
+            display: grid;
+            grid-template-columns: 1fr 1.5fr;
+            gap: 16px;
+        }
+
+        .chart-card {
+            background: linear-gradient(135deg, #0f0f0f 0%, #0a0a0a 100%);
+            border: 1px solid #1a1a1a;
+            border-radius: 8px;
+            padding: 24px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chart-card-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #ffffff;
+            margin-bottom: 16px;
+            letter-spacing: -0.3px;
+        }
+
+        .chart-wrapper {
+            flex: 1;
+            position: relative;
+            min-height: 300px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .chart-wrapper canvas {
+            max-height: 100%;
+        }
+
+        /* Weak Areas Row */
+        .weak-areas-row {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .weak-areas-card {
+            background: linear-gradient(135deg, #0f0f0f 0%, #0a0a0a 100%);
+            border: 1px solid #1a1a1a;
+            border-radius: 8px;
+            padding: 24px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .weak-areas-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #ffffff;
+            margin-bottom: 16px;
+            letter-spacing: -0.3px;
+        }
+
+        .weak-areas-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .weak-area-item {
+            background: #050505;
+            border: 1px solid #1a1a1a;
+            border-radius: 6px;
+            padding: 16px;
+            display: grid;
+            grid-template-columns: 40px 1fr auto;
+            gap: 16px;
+            align-items: center;
+            transition: all 0.3s ease;
+        }
+
+        .weak-area-item:hover {
+            background: #0a0a0a;
+            border-color: #2a2a2a;
+            transform: translateX(4px);
+        }
+
+        .weak-area-rank {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #ff8c00 0%, #ff6b00 100%);
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            font-weight: 700;
+            color: #000000;
+        }
+
+        .weak-area-info {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .weak-area-topic {
+            font-size: 14px;
+            font-weight: 600;
+            color: #ffffff;
+        }
+
+        .weak-area-week {
+            font-size: 12px;
+            color: #888888;
+        }
+
+        .weak-area-stats {
+            display: flex;
+            gap: 16px;
+            align-items: center;
+        }
+
+        .weak-area-stat {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+        }
+
+        .weak-area-stat-label {
+            font-size: 10px;
+            color: #666666;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .weak-area-stat-value {
+            font-size: 16px;
+            font-weight: 600;
+            color: #ff8c00;
+        }
+
+        .empty-weak-areas {
+            text-align: center;
+            padding: 40px 20px;
+            color: #666666;
+        }
+
+        .empty-weak-areas-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+
+        .empty-weak-areas-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #888888;
+            margin-bottom: 8px;
+        }
+
+        .empty-weak-areas-text {
+            font-size: 14px;
+            line-height: 1.6;
+            color: #666666;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="app">
+        <!-- ========================================== -->
+        <!-- SIDEBAR - Shows all weeks with progress -->
+        <!-- ========================================== -->
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-title">Progress Overview</div>
+                <div class="overall-progress" id="overallProgress">0/376</div>
+                <div class="overall-label">problems completed</div>
+                <div class="overall-progress" id="revisionCounter" style="color: #ff8c00; margin-top: 12px;">0</div>
+                <div class="overall-label">needs revision</div>
+            </div>
+            <div class="weeks-list" id="weeksList">
+                <!-- Weeks will be loaded here by JavaScript -->
+            </div>
+        </div>
+
+        <!-- ========================================== -->
+        <!-- MAIN CONTENT - Shows current day's problems -->
+        <!-- ========================================== -->
+        <div class="main">
+            <!-- Top navigation bar -->
+            <div class="top-bar">
+                <div class="day-nav">
+                    <button class="nav-btn" id="prevBtn" onclick="previousDay()">←</button>
+                    <div class="day-label" id="dayLabel">Week 1 · Day 1</div>
+                    <button class="nav-btn" id="nextBtn" onclick="nextDay()">→</button>
+                </div>
+                <div class="stats">
+                    <button class="dashboard-btn" onclick="openDashboard()">
+                        📊 Analytics
+                    </button>
+                </div>
+            </div>
+
+            <!-- Overall progress bar -->
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+            </div>
+
+            <!-- Problem cards container -->
+            <div class="content" id="content">
+                <!-- Problems loaded here by JavaScript -->
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- PROGRESS DASHBOARD MODAL -->
+    <!-- ========================================== -->
+    <div class="dashboard-overlay" id="dashboardOverlay">
+        <div class="dashboard-container">
+            <div class="dashboard-header">
+                <div class="dashboard-title">Analytics Dashboard</div>
+                <button class="dashboard-close-btn" onclick="closeDashboard()">✕ Close</button>
+            </div>
+
+            <div class="dashboard-content">
+                <div class="dashboard-grid">
+                    <!-- Stats Row -->
+                    <div class="stats-row">
+                        <div class="stat-card">
+                            <div class="stat-card-label">Total Progress</div>
+                            <div class="stat-card-value" id="dash-total-progress">0/376</div>
+                            <div class="stat-card-detail" id="dash-total-percent">0% complete</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-card-label">Easy Problems</div>
+                            <div class="stat-card-value" id="dash-easy-progress">0/120</div>
+                            <div class="stat-card-detail" id="dash-easy-percent">0% complete</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-card-label">Medium Problems</div>
+                            <div class="stat-card-value" id="dash-medium-progress">0/150</div>
+                            <div class="stat-card-detail" id="dash-medium-percent">0% complete</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-card-label">Hard Problems</div>
+                            <div class="stat-card-value" id="dash-hard-progress">0/80</div>
+                            <div class="stat-card-detail" id="dash-hard-percent">0% complete</div>
+                        </div>
+                    </div>
+
+                    <!-- Charts Row -->
+                    <div class="charts-row">
+                        <div class="chart-card">
+                            <div class="chart-card-title">Completion Overview</div>
+                            <div class="chart-wrapper">
+                                <canvas id="progressPieChart"></canvas>
+                            </div>
+                        </div>
+                        <div class="chart-card">
+                            <div class="chart-card-title">Difficulty Breakdown</div>
+                            <div class="chart-wrapper">
+                                <canvas id="difficultyBarChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Weak Areas Row -->
+                    <div class="weak-areas-row">
+                        <div class="weak-areas-card">
+                            <div class="weak-areas-title">⚠️ Top Weak Areas (Needs Revision)</div>
+                            <div class="weak-areas-list" id="weakAreasList">
+                                <!-- Weak areas will be populated by JavaScript -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ============================================
+        // PROBLEMS DATABASE - Contains all 376 LeetCode problems
+        // ============================================
+        // Structure: 26 weeks → each week has multiple days → each day has multiple problems
+        // Each problem includes: id, name, difficulty, priority, link, description, and learning aim
+
+        const problemsDatabase = {
+            week1: {
+                title: "Arrays - Foundation",
+                pattern: "Iteration, Two-pass, Frequency counting",
+                days: {
+                    day1: [
+                        { id: 1, name: "Two Sum", difficulty: "easy", priority: "", link: "https://leetcode.com/problems/two-sum/", description: "Two Sum", aim: "Master Arrays - Foundation patterns." },
+                        { id: 26, name: "Remove Duplicates from Sorted Array", difficulty: "easy", priority: "", link: "https://leetcode.com/problems/remove-duplicates-from-sorted-array/", description: "Remove Duplicates from Sorted Array - nice", aim: "Master Arrays - Foundation patterns." },
+                        { id: 27, name: "Remove Element", difficulty: "easy", priority: "", link: "https://leetcode.com/problems/remove-element/", description: "Remove Element", aim: "Master Arrays - Foundation patterns." },
+                    ],
+                    day2: [
+                        { id: 283, name: "Move Zeroes", difficulty: "easy", priority: "", link: "https://leetcode.com/problems/move-zeroes/", description: "Move Zeroes", aim: "Master Arrays - Foundation patterns." },
+                        { id: 88, name: "Merge Sorted Array", difficulty: "easy", priority: "", link: "https://leetcode.com/problems/merge-sorted-array/", description: "Merge Sorted Array - nice", aim: "Master Arrays - Foundation patterns." },
+                        { id: 66, name: "Plus One", difficulty: "easy", priority: "", link: "https://leetcode.com/problems/plus-one/", description: "Plus One", aim: "Master Arrays - Foundation patterns." },
+                    ],
+                    day3: [
+                        { id: 217, name: "Contains Duplicate", difficulty: "easy", priority: "", link: "https://leetcode.com/problems/contains-duplicate/", description: "Contains Duplicate", aim: "Master Arrays - Foundation patterns." },
+                        { id: 242, name: "Valid Anagram", difficulty: "easy", priority: "", link: "https://leetcode.com/problems/valid-anagram/", description: "Valid Anagram", aim: "Master Arrays - Foundation patterns." },
+                        { id: 169, name: "Majority Element", difficulty: "easy", priority: "", link: "https://leetcode.com/problems/majority-element/", description: "Majority Element", aim: "Master Arrays - Foundation patterns." },
+                    ],
+                    day4: [
+                        { id: 136, name: "Single Number", difficulty: "easy", priority: "", link: "https://leetcode.com/problems/single-number/", description: "Single Number", aim: "Master Arrays - Foundation patterns." },
+                        { id: 268, name: "Missing Number", difficulty: "easy", priority: "", link: "https://leetcode.com/problems/missing-number/", description: "Missing Number", aim: "Master Arrays - Foundation patterns." },
+                        { id: 448, name: "Find All Numbers Disappeared in an Array", difficulty: "easy", priority: "", link: "https://leetcode.com/problems/find-all-numbers-disappeared-in-an-array/", description: "Find All Numbers Disappeared in an Array", aim: "Master Arrays - Foundation patterns." },
+                    ],
+                    day5: [
+                        { id: 442, name: "Find All Duplicates in an Array", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/find-all-duplicates-in-an-array/", description: "Find All Duplicates in an Array", aim: "Master Arrays - Foundation patterns." },
+                        { id: 287, name: "Find the Duplicate Number", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/find-the-duplicate-number/", description: "Find the Duplicate Number", aim: "Master Arrays - Foundation patterns." },
+                        { id: 41, name: "First Missing Positive", difficulty: "hard", priority: "", link: "https://leetcode.com/problems/first-missing-positive/", description: "First Missing Positive", aim: "Master Arrays - Foundation patterns." },
+                    ],
+                }
+            },
+            week2: {
+                title: "Two Pointers",
+                pattern: "Left-right pointers, Fast-slow pointers",
+                days: {
+                    day1: [
+                        { id: 344, name: "Reverse String", difficulty: "easy", priority: "", link: "https://leetcode.com/problems/reverse-string/", description: "Reverse String", aim: "Master Two Pointers patterns." },
+                        { id: 125, name: "Valid Palindrome", difficulty: "easy", priority: "", link: "https://leetcode.com/problems/valid-palindrome/", description: "Valid Palindrome", aim: "Master Two Pointers patterns." },
+                        { id: 680, name: "Valid Palindrome II", difficulty: "easy", priority: "", link: "https://leetcode.com/problems/valid-palindrome-ii/", description: "Valid Palindrome II", aim: "Master Two Pointers patterns." },
+                    ],
+                    day2: [
+                        { id: 977, name: "Squares of a Sorted Array", difficulty: "easy", priority: "", link: "https://leetcode.com/problems/squares-of-a-sorted-array/", description: "Squares of a Sorted Array", aim: "Master Two Pointers patterns." },
+                        { id: 167, name: "Two Sum II", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/two-sum-ii-input-array-is-sorted/", description: "Two Sum II", aim: "Master Two Pointers patterns." },
+                    ],
+                    day3: [
+                        { id: 15, name: "3Sum", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/3sum/", description: "3Sum", aim: "Master Two Pointers patterns." },
+                        { id: 16, name: "3Sum Closest", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/3sum-closest/", description: "3Sum Closest", aim: "Master Two Pointers patterns." },
+                    ],
+                    day4: [
+                        { id: 18, name: "4Sum", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/4sum/", description: "4Sum", aim: "Master Two Pointers patterns." },
+                        { id: 75, name: "Sort Colors", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/sort-colors/", description: "Sort Colors", aim: "Master Two Pointers patterns." },
+                    ],
+                    day5: [
+                        { id: 11, name: "Container With Most Water", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/container-with-most-water/", description: "Container With Most Water", aim: "Master Two Pointers patterns." },
+                        { id: 42, name: "Trapping Rain Water", difficulty: "hard", priority: "", link: "https://leetcode.com/problems/trapping-rain-water/", description: "Trapping Rain Water", aim: "Master Two Pointers patterns." },
+                        { id: 845, name: "Longest Mountain in Array", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/longest-mountain-in-array/", description: "Longest Mountain in Array", aim: "Master Two Pointers patterns." },
+                    ],
+                }
+            },
+            week3: {
+                title: "Sliding Window",
+                pattern: "Fixed window, Variable window, Shrinkable window",
+                days: {
+                    day1: [
+                        { id: 643, name: "Maximum Average Subarray I", difficulty: "easy", priority: "", link: "https://leetcode.com/problems/maximum-average-subarray-i/", description: "Maximum Average Subarray I", aim: "Master Sliding Window patterns." },
+                        { id: 1456, name: "Maximum Number of Vowels", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/maximum-number-of-vowels-in-a-substring-of-given-length/", description: "Maximum Number of Vowels", aim: "Master Sliding Window patterns." },
+                    ],
+                    day2: [
+                        { id: 121, name: "Best Time to Buy and Sell Stock", difficulty: "easy", priority: "", link: "https://leetcode.com/problems/best-time-to-buy-and-sell-stock/", description: "Best Time to Buy and Sell Stock", aim: "Master Sliding Window patterns." },
+                        { id: 122, name: "Best Time to Buy and Sell Stock II", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/best-time-to-buy-and-sell-stock-ii/", description: "Best Time to Buy and Sell Stock II", aim: "Master Sliding Window patterns." },
+                    ],
+                    day3: [
+                        { id: 3, name: "Longest Substring Without Repeating Characters", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/longest-substring-without-repeating-characters/", description: "Longest Substring Without Repeating Characters", aim: "Master Sliding Window patterns." },
+                        { id: 1004, name: "Max Consecutive Ones III", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/max-consecutive-ones-iii/", description: "Max Consecutive Ones III", aim: "Master Sliding Window patterns." },
+                    ],
+                    day4: [
+                        { id: 424, name: "Longest Repeating Character Replacement", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/longest-repeating-character-replacement/", description: "Longest Repeating Character Replacement", aim: "Master Sliding Window patterns." },
+                        { id: 567, name: "Permutation in String", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/permutation-in-string/", description: "Permutation in String", aim: "Master Sliding Window patterns." },
+                    ],
+                    day5: [
+                        { id: 438, name: "Find All Anagrams in a String", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/find-all-anagrams-in-a-string/", description: "Find All Anagrams in a String", aim: "Master Sliding Window patterns." },
+                        { id: 76, name: "Minimum Window Substring", difficulty: "hard", priority: "", link: "https://leetcode.com/problems/minimum-window-substring/", description: "Minimum Window Substring", aim: "Master Sliding Window patterns." },
+                    ],
+                    day6: [
+                        { id: 209, name: "Minimum Size Subarray Sum", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/minimum-size-subarray-sum/", description: "Minimum Size Subarray Sum", aim: "Master Sliding Window patterns." },
+                        { id: 713, name: "Subarray Product Less Than K", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/subarray-product-less-than-k/", description: "Subarray Product Less Than K", aim: "Master Sliding Window patterns." },
+                        { id: 904, name: "Fruit Into Baskets", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/fruit-into-baskets/", description: "Fruit Into Baskets", aim: "Master Sliding Window patterns." },
+                    ],
+                }
+            },
+            week4: {
+                title: "Strings & Hashing",
+                pattern: "String manipulation, StringBuilder, HashMap",
+                days: {
+                    day1: [
+                        { id: 49, name: "Group Anagrams", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/group-anagrams/", description: "Group Anagrams", aim: "Master Strings & Hashing patterns." },
+                        { id: 387, name: "First Unique Character in a String", difficulty: "easy", priority: "", link: "https://leetcode.com/problems/first-unique-character-in-a-string/", description: "First Unique Character in a String", aim: "Master Strings & Hashing patterns." },
+                        { id: 383, name: "Ransom Note", difficulty: "easy", priority: "", link: "https://leetcode.com/problems/ransom-note/", description: "Ransom Note", aim: "Master Strings & Hashing patterns." },
+                    ],
+                    day2: [
+                        { id: 205, name: "Isomorphic Strings", difficulty: "easy", priority: "", link: "https://leetcode.com/problems/isomorphic-strings/", description: "Isomorphic Strings", aim: "Master Strings & Hashing patterns." },
+                        { id: 290, name: "Word Pattern", difficulty: "easy", priority: "", link: "https://leetcode.com/problems/word-pattern/", description: "Word Pattern", aim: "Master Strings & Hashing patterns." },
+                        { id: 451, name: "Sort Characters By Frequency", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/sort-characters-by-frequency/", description: "Sort Characters By Frequency", aim: "Master Strings & Hashing patterns." },
+                    ],
+                    day3: [
+                        { id: 14, name: "Longest Common Prefix", difficulty: "easy", priority: "", link: "https://leetcode.com/problems/longest-common-prefix/", description: "Longest Common Prefix", aim: "Master Strings & Hashing patterns." },
+                        { id: 28, name: "Find the Index of the First Occurrence in a String", difficulty: "easy", priority: "", link: "https://leetcode.com/problems/find-the-index-of-the-first-occurrence-in-a-string/", description: "Find the Index of the First Occurrence in a String", aim: "Master Strings & Hashing patterns." },
+                        { id: 151, name: "Reverse Words in a String", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/reverse-words-in-a-string/", description: "Reverse Words in a String", aim: "Master Strings & Hashing patterns." },
+                    ],
+                    day4: [
+                        { id: 6, name: "Zigzag Conversion", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/zigzag-conversion/", description: "Zigzag Conversion", aim: "Master Strings & Hashing patterns." },
+                        { id: 8, name: "String to Integer (atoi)", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/string-to-integer-atoi/", description: "String to Integer (atoi)", aim: "Master Strings & Hashing patterns." },
+                        { id: 12, name: "Integer to Roman", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/integer-to-roman/", description: "Integer to Roman", aim: "Master Strings & Hashing patterns." },
+                    ],
+                }
+            },
+            week5: {
+                title: "Binary Search - Basics",
+                pattern: "Template I, II, III, Search space reduction",
+                days: {
+                    day1: [
+                        { id: 704, name: "Binary Search", difficulty: "easy", priority: "", link: "https://leetcode.com/problems/binary-search/", description: "Binary Search", aim: "Master Binary Search - Basics patterns." },
+                        { id: 35, name: "Search Insert Position", difficulty: "easy", priority: "", link: "https://leetcode.com/problems/search-insert-position/", description: "Search Insert Position", aim: "Master Binary Search - Basics patterns." },
+                        { id: 744, name: "Find Smallest Letter Greater Than Target", difficulty: "easy", priority: "", link: "https://leetcode.com/problems/find-smallest-letter-greater-than-target/", description: "Find Smallest Letter Greater Than Target", aim: "Master Binary Search - Basics patterns." },
+                    ],
+                    day2: [
+                        { id: 374, name: "Guess Number Higher or Lower", difficulty: "easy", priority: "", link: "https://leetcode.com/problems/guess-number-higher-or-lower/", description: "Guess Number Higher or Lower", aim: "Master Binary Search - Basics patterns." },
+                        { id: 367, name: "Valid Perfect Square", difficulty: "easy", priority: "", link: "https://leetcode.com/problems/valid-perfect-square/", description: "Valid Perfect Square", aim: "Master Binary Search - Basics patterns." },
+                        { id: 69, name: "Sqrt(x)", difficulty: "easy", priority: "", link: "https://leetcode.com/problems/sqrtx/", description: "Sqrt(x)", aim: "Master Binary Search - Basics patterns." },
+                    ],
+                    day3: [
+                        { id: 278, name: "First Bad Version", difficulty: "easy", priority: "", link: "https://leetcode.com/problems/first-bad-version/", description: "First Bad Version", aim: "Master Binary Search - Basics patterns." },
+                        { id: 34, name: "Find First and Last Position", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/find-first-and-last-position-of-element-in-sorted-array/", description: "Find First and Last Position", aim: "Master Binary Search - Basics patterns." },
+                        { id: 33, name: "Search in Rotated Sorted Array", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/search-in-rotated-sorted-array/", description: "Search in Rotated Sorted Array", aim: "Master Binary Search - Basics patterns." },
+                    ],
+                    day4: [
+                        { id: 81, name: "Search in Rotated Sorted Array II", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/search-in-rotated-sorted-array-ii/", description: "Search in Rotated Sorted Array II", aim: "Master Binary Search - Basics patterns." },
+                        { id: 153, name: "Find Minimum in Rotated Sorted Array", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/find-minimum-in-rotated-sorted-array/", description: "Find Minimum in Rotated Sorted Array", aim: "Master Binary Search - Basics patterns." },
+                        { id: 154, name: "Find Minimum in Rotated Sorted Array II", difficulty: "hard", priority: "", link: "https://leetcode.com/problems/find-minimum-in-rotated-sorted-array-ii/", description: "Find Minimum in Rotated Sorted Array II", aim: "Master Binary Search - Basics patterns." },
+                    ],
+                    day5: [
+                        { id: 162, name: "Find Peak Element", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/find-peak-element/", description: "Find Peak Element", aim: "Master Binary Search - Basics patterns." },
+                        { id: 852, name: "Peak Index in a Mountain Array", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/peak-index-in-a-mountain-array/", description: "Peak Index in a Mountain Array", aim: "Master Binary Search - Basics patterns." },
+                        { id: 1095, name: "Find in Mountain Array", difficulty: "hard", priority: "", link: "https://leetcode.com/problems/find-in-mountain-array/", description: "Find in Mountain Array", aim: "Master Binary Search - Basics patterns." },
+                    ],
+                }
+            },
+            week6: {
+                title: "Sorting & Basics",
+                pattern: "QuickSort, MergeSort, Heap, Intervals",
+                days: {
+                    day1: [
+                        { id: 912, name: "Sort an Array", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/sort-an-array/", description: "Sort an Array", aim: "Master Sorting & Basics patterns." },
+                        { id: 215, name: "Kth Largest Element in an Array", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/kth-largest-element-in-an-array/", description: "Kth Largest Element in an Array", aim: "Master Sorting & Basics patterns." },
+                    ],
+                    day2: [
+                        { id: 347, name: "Top K Frequent Elements", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/top-k-frequent-elements/", description: "Top K Frequent Elements", aim: "Master Sorting & Basics patterns." },
+                        { id: 973, name: "K Closest Points to Origin", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/k-closest-points-to-origin/", description: "K Closest Points to Origin", aim: "Master Sorting & Basics patterns." },
+                    ],
+                    day3: [
+                        { id: 252, name: "Meeting Rooms", difficulty: "easy", priority: "", link: "https://leetcode.com/problems/meeting-rooms/", description: "Meeting Rooms", aim: "Master Sorting & Basics patterns." },
+                        { id: 253, name: "Meeting Rooms II", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/meeting-rooms-ii/", description: "Meeting Rooms II", aim: "Master Sorting & Basics patterns." },
+                    ],
+                    day4: [
+                        { id: 56, name: "Merge Intervals", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/merge-intervals/", description: "Merge Intervals", aim: "Master Sorting & Basics patterns." },
+                        { id: 57, name: "Insert Interval", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/insert-interval/", description: "Insert Interval", aim: "Master Sorting & Basics patterns." },
+                    ],
+                    day5: [
+                        { id: 435, name: "Non-overlapping Intervals", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/non-overlapping-intervals/", description: "Non-overlapping Intervals", aim: "Master Sorting & Basics patterns." },
+                        { id: 986, name: "Interval List Intersections", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/interval-list-intersections/", description: "Interval List Intersections", aim: "Master Sorting & Basics patterns." },
+                    ],
+                }
+            },
+            week7: {
+                title: "Stack Basics",
+                pattern: "Monotonic stack, Expression parsing",
+                days: {
+                    day1: [
+                        { id: 20, name: "Valid Parentheses", difficulty: "easy", priority: "", link: "https://leetcode.com/problems/valid-parentheses/", description: "Valid Parentheses", aim: "Master Stack Basics patterns." },
+                        { id: 1047, name: "Remove All Adjacent Duplicates In String", difficulty: "easy", priority: "", link: "https://leetcode.com/problems/remove-all-adjacent-duplicates-in-string/", description: "Remove All Adjacent Duplicates In String", aim: "Master Stack Basics patterns." },
+                        { id: 844, name: "Backspace String Compare", difficulty: "easy", priority: "", link: "https://leetcode.com/problems/backspace-string-compare/", description: "Backspace String Compare", aim: "Master Stack Basics patterns." },
+                    ],
+                    day2: [
+                        { id: 71, name: "Simplify Path", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/simplify-path/", description: "Simplify Path", aim: "Master Stack Basics patterns." },
+                        { id: 150, name: "Evaluate Reverse Polish Notation", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/evaluate-reverse-polish-notation/", description: "Evaluate Reverse Polish Notation", aim: "Master Stack Basics patterns." },
+                    ],
+                    day3: [
+                        { id: 224, name: "Basic Calculator", difficulty: "hard", priority: "", link: "https://leetcode.com/problems/basic-calculator/", description: "Basic Calculator", aim: "Master Stack Basics patterns." },
+                        { id: 227, name: "Basic Calculator II", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/basic-calculator-ii/", description: "Basic Calculator II", aim: "Master Stack Basics patterns." },
+                    ],
+                    day4: [
+                        { id: 496, name: "Next Greater Element I", difficulty: "easy", priority: "", link: "https://leetcode.com/problems/next-greater-element-i/", description: "Next Greater Element I", aim: "Master Stack Basics patterns." },
+                        { id: 503, name: "Next Greater Element II", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/next-greater-element-ii/", description: "Next Greater Element II", aim: "Master Stack Basics patterns." },
+                    ],
+                    day5: [
+                        { id: 739, name: "Daily Temperatures", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/daily-temperatures/", description: "Daily Temperatures", aim: "Master Stack Basics patterns." },
+                        { id: 901, name: "Online Stock Span", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/online-stock-span/", description: "Online Stock Span", aim: "Master Stack Basics patterns." },
+                        { id: 84, name: "Largest Rectangle in Histogram", difficulty: "hard", priority: "", link: "https://leetcode.com/problems/largest-rectangle-in-histogram/", description: "Largest Rectangle in Histogram", aim: "Master Stack Basics patterns." },
+                    ],
+                }
+            },
+            week8: {
+                title: "Queue & Deque",
+                pattern: "Sliding window with deque, BFS preparation",
+                days: {
+                    day1: [
+                        { id: 232, name: "Implement Queue using Stacks", difficulty: "easy", priority: "", link: "https://leetcode.com/problems/implement-queue-using-stacks/", description: "Implement Queue using Stacks", aim: "Master Queue & Deque patterns." },
+                        { id: 225, name: "Implement Stack using Queues", difficulty: "easy", priority: "", link: "https://leetcode.com/problems/implement-stack-using-queues/", description: "Implement Stack using Queues", aim: "Master Queue & Deque patterns." },
+                    ],
+                    day2: [
+                        { id: 622, name: "Design Circular Queue", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/design-circular-queue/", description: "Design Circular Queue", aim: "Master Queue & Deque patterns." },
+                    ],
+                    day3: [
+                        { id: 239, name: "Sliding Window Maximum", difficulty: "hard", priority: "", link: "https://leetcode.com/problems/sliding-window-maximum/", description: "Sliding Window Maximum", aim: "Master Queue & Deque patterns." },
+                    ],
+                    day4: [
+                        { id: 862, name: "Shortest Subarray with Sum at Least K", difficulty: "hard", priority: "", link: "https://leetcode.com/problems/shortest-subarray-with-sum-at-least-k/", description: "Shortest Subarray with Sum at Least K", aim: "Master Queue & Deque patterns." },
+                    ],
+                    day5: [
+                        { id: 1438, name: "Longest Continuous Subarray", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/longest-continuous-subarray-with-absolute-diff-less-than-or-equal-to-limit/", description: "Longest Continuous Subarray", aim: "Master Queue & Deque patterns." },
+                    ],
+                }
+            },
+            week9: {
+                title: "Linked Lists - Part 1",
+                pattern: "Two-pointer, Dummy node, Reversal, Fast-slow",
+                days: {
+                    day1: [
+                        { id: 237, name: "Delete Node in a Linked List", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/delete-node-in-a-linked-list/", description: "Delete Node in a Linked List", aim: "Master Linked Lists - Part 1 patterns." },
+                        { id: 203, name: "Remove Linked List Elements", difficulty: "easy", priority: "", link: "https://leetcode.com/problems/remove-linked-list-elements/", description: "Remove Linked List Elements", aim: "Master Linked Lists - Part 1 patterns." },
+                        { id: 83, name: "Remove Duplicates from Sorted List", difficulty: "easy", priority: "", link: "https://leetcode.com/problems/remove-duplicates-from-sorted-list/", description: "Remove Duplicates from Sorted List", aim: "Master Linked Lists - Part 1 patterns." },
+                    ],
+                    day2: [
+                        { id: 82, name: "Remove Duplicates from Sorted List II", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/remove-duplicates-from-sorted-list-ii/", description: "Remove Duplicates from Sorted List II", aim: "Master Linked Lists - Part 1 patterns." },
+                        { id: 206, name: "Reverse Linked List", difficulty: "easy", priority: "", link: "https://leetcode.com/problems/reverse-linked-list/", description: "Reverse Linked List", aim: "Master Linked Lists - Part 1 patterns." },
+                        { id: 92, name: "Reverse Linked List II", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/reverse-linked-list-ii/", description: "Reverse Linked List II", aim: "Master Linked Lists - Part 1 patterns." },
+                    ],
+                    day3: [
+                        { id: 25, name: "Reverse Nodes in k-Group", difficulty: "hard", priority: "", link: "https://leetcode.com/problems/reverse-nodes-in-k-group/", description: "Reverse Nodes in k-Group", aim: "Master Linked Lists - Part 1 patterns." },
+                        { id: 24, name: "Swap Nodes in Pairs", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/swap-nodes-in-pairs/", description: "Swap Nodes in Pairs", aim: "Master Linked Lists - Part 1 patterns." },
+                    ],
+                    day4: [
+                        { id: 234, name: "Palindrome Linked List", difficulty: "easy", priority: "", link: "https://leetcode.com/problems/palindrome-linked-list/", description: "Palindrome Linked List", aim: "Master Linked Lists - Part 1 patterns." },
+                        { id: 143, name: "Reorder List", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/reorder-list/", description: "Reorder List", aim: "Master Linked Lists - Part 1 patterns." },
+                    ],
+                    day5: [
+                        { id: 141, name: "Linked List Cycle", difficulty: "easy", priority: "", link: "https://leetcode.com/problems/linked-list-cycle/", description: "Linked List Cycle", aim: "Master Linked Lists - Part 1 patterns." },
+                        { id: 142, name: "Linked List Cycle II", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/linked-list-cycle-ii/", description: "Linked List Cycle II", aim: "Master Linked Lists - Part 1 patterns." },
+                        { id: 287, name: "Find the Duplicate Number", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/find-the-duplicate-number/", description: "Find the Duplicate Number", aim: "Master Linked Lists - Part 1 patterns." },
+                    ],
+                }
+            },
+            week10: {
+                title: "Linked Lists - Part 2",
+                pattern: "Merge, Add, Copy",
+                days: {
+                    day1: [
+                        { id: 160, name: "Intersection of Two Linked Lists", difficulty: "easy", priority: "", link: "https://leetcode.com/problems/intersection-of-two-linked-lists/", description: "Intersection of Two Linked Lists", aim: "Master Linked Lists - Part 2 patterns." },
+                        { id: 19, name: "Remove Nth Node From End", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/remove-nth-node-from-end-of-list/", description: "Remove Nth Node From End", aim: "Master Linked Lists - Part 2 patterns." },
+                        { id: 61, name: "Rotate List", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/rotate-list/", description: "Rotate List", aim: "Master Linked Lists - Part 2 patterns." },
+                    ],
+                    day2: [
+                        { id: 86, name: "Partition List", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/partition-list/", description: "Partition List", aim: "Master Linked Lists - Part 2 patterns." },
+                        { id: 328, name: "Odd Even Linked List", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/odd-even-linked-list/", description: "Odd Even Linked List", aim: "Master Linked Lists - Part 2 patterns." },
+                    ],
+                    day3: [
+                        { id: 21, name: "Merge Two Sorted Lists", difficulty: "easy", priority: "", link: "https://leetcode.com/problems/merge-two-sorted-lists/", description: "Merge Two Sorted Lists", aim: "Master Linked Lists - Part 2 patterns." },
+                        { id: 23, name: "Merge k Sorted Lists", difficulty: "hard", priority: "", link: "https://leetcode.com/problems/merge-k-sorted-lists/", description: "Merge k Sorted Lists", aim: "Master Linked Lists - Part 2 patterns." },
+                    ],
+                    day4: [
+                        { id: 2, name: "Add Two Numbers", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/add-two-numbers/", description: "Add Two Numbers", aim: "Master Linked Lists - Part 2 patterns." },
+                        { id: 445, name: "Add Two Numbers II", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/add-two-numbers-ii/", description: "Add Two Numbers II", aim: "Master Linked Lists - Part 2 patterns." },
+                    ],
+                    day5: [
+                        { id: 138, name: "Copy List with Random Pointer", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/copy-list-with-random-pointer/", description: "Copy List with Random Pointer", aim: "Master Linked Lists - Part 2 patterns." },
+                        { id: 148, name: "Sort List", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/sort-list/", description: "Sort List", aim: "Master Linked Lists - Part 2 patterns." },
+                        { id: 147, name: "Insertion Sort List", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/insertion-sort-list/", description: "Insertion Sort List", aim: "Master Linked Lists - Part 2 patterns." },
+                        { id: 430, name: "Flatten a Multilevel Doubly Linked List", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/flatten-a-multilevel-doubly-linked-list/", description: "Flatten a Multilevel Doubly Linked List", aim: "Master Linked Lists - Part 2 patterns." },
+                    ],
+                }
+            },
+            week11: {
+                title: "Trees - Foundation Part 1",
+                pattern: "DFS, BFS, Recursion",
+                days: {
+                    day1: [
+                        { id: 144, name: "Binary Tree Preorder Traversal", difficulty: "easy", priority: "", link: "https://leetcode.com/problems/binary-tree-preorder-traversal/", description: "Binary Tree Preorder Traversal", aim: "Master Trees - Foundation Part 1 patterns." },
+                        { id: 94, name: "Binary Tree Inorder Traversal", difficulty: "easy", priority: "", link: "https://leetcode.com/problems/binary-tree-inorder-traversal/", description: "Binary Tree Inorder Traversal", aim: "Master Trees - Foundation Part 1 patterns." },
+                        { id: 145, name: "Binary Tree Postorder Traversal", difficulty: "easy", priority: "", link: "https://leetcode.com/problems/binary-tree-postorder-traversal/", description: "Binary Tree Postorder Traversal", aim: "Master Trees - Foundation Part 1 patterns." },
+                    ],
+                    day2: [
+                        { id: 102, name: "Binary Tree Level Order Traversal", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/binary-tree-level-order-traversal/", description: "Binary Tree Level Order Traversal", aim: "Master Trees - Foundation Part 1 patterns." },
+                        { id: 107, name: "Binary Tree Level Order Traversal II", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/binary-tree-level-order-traversal-ii/", description: "Binary Tree Level Order Traversal II", aim: "Master Trees - Foundation Part 1 patterns." },
+                    ],
+                    day3: [
+                        { id: 104, name: "Maximum Depth of Binary Tree", difficulty: "easy", priority: "", link: "https://leetcode.com/problems/maximum-depth-of-binary-tree/", description: "Maximum Depth of Binary Tree", aim: "Master Trees - Foundation Part 1 patterns." },
+                        { id: 111, name: "Minimum Depth of Binary Tree", difficulty: "easy", priority: "", link: "https://leetcode.com/problems/minimum-depth-of-binary-tree/", description: "Minimum Depth of Binary Tree", aim: "Master Trees - Foundation Part 1 patterns." },
+                        { id: 110, name: "Balanced Binary Tree", difficulty: "easy", priority: "", link: "https://leetcode.com/problems/balanced-binary-tree/", description: "Balanced Binary Tree", aim: "Master Trees - Foundation Part 1 patterns." },
+                    ],
+                    day4: [
+                        { id: 100, name: "Same Tree", difficulty: "easy", priority: "", link: "https://leetcode.com/problems/same-tree/", description: "Same Tree", aim: "Master Trees - Foundation Part 1 patterns." },
+                        { id: 101, name: "Symmetric Tree", difficulty: "easy", priority: "", link: "https://leetcode.com/problems/symmetric-tree/", description: "Symmetric Tree", aim: "Master Trees - Foundation Part 1 patterns." },
+                        { id: 572, name: "Subtree of Another Tree", difficulty: "easy", priority: "", link: "https://leetcode.com/problems/subtree-of-another-tree/", description: "Subtree of Another Tree", aim: "Master Trees - Foundation Part 1 patterns." },
+                    ],
+                    day5: [
+                        { id: 226, name: "Invert Binary Tree", difficulty: "easy", priority: "", link: "https://leetcode.com/problems/invert-binary-tree/", description: "Invert Binary Tree", aim: "Master Trees - Foundation Part 1 patterns." },
+                        { id: 617, name: "Merge Two Binary Trees", difficulty: "easy", priority: "", link: "https://leetcode.com/problems/merge-two-binary-trees/", description: "Merge Two Binary Trees", aim: "Master Trees - Foundation Part 1 patterns." },
+                        { id: 112, name: "Path Sum", difficulty: "easy", priority: "", link: "https://leetcode.com/problems/path-sum/", description: "Path Sum", aim: "Master Trees - Foundation Part 1 patterns." },
+                        { id: 113, name: "Path Sum II", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/path-sum-ii/", description: "Path Sum II", aim: "Master Trees - Foundation Part 1 patterns." },
+                    ],
+                }
+            },
+            week12: {
+                title: "Trees - Foundation Part 2",
+                pattern: "Advanced DFS, Path problems",
+                days: {
+                    day1: [
+                        { id: 257, name: "Binary Tree Paths", difficulty: "easy", priority: "", link: "https://leetcode.com/problems/binary-tree-paths/", description: "Binary Tree Paths", aim: "Master Trees - Foundation Part 2 patterns." },
+                        { id: 129, name: "Sum Root to Leaf Numbers", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/sum-root-to-leaf-numbers/", description: "Sum Root to Leaf Numbers", aim: "Master Trees - Foundation Part 2 patterns." },
+                        { id: 437, name: "Path Sum III", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/path-sum-iii/", description: "Path Sum III", aim: "Master Trees - Foundation Part 2 patterns." },
+                    ],
+                    day2: [
+                        { id: 543, name: "Diameter of Binary Tree", difficulty: "easy", priority: "", link: "https://leetcode.com/problems/diameter-of-binary-tree/", description: "Diameter of Binary Tree", aim: "Master Trees - Foundation Part 2 patterns." },
+                        { id: 124, name: "Binary Tree Maximum Path Sum", difficulty: "hard", priority: "", link: "https://leetcode.com/problems/binary-tree-maximum-path-sum/", description: "Binary Tree Maximum Path Sum", aim: "Master Trees - Foundation Part 2 patterns." },
+                    ],
+                    day3: [
+                        { id: 236, name: "Lowest Common Ancestor", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/lowest-common-ancestor-of-a-binary-tree/", description: "Lowest Common Ancestor", aim: "Master Trees - Foundation Part 2 patterns." },
+                        { id: 235, name: "Lowest Common Ancestor of BST", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/lowest-common-ancestor-of-a-binary-search-tree/", description: "Lowest Common Ancestor of BST", aim: "Master Trees - Foundation Part 2 patterns." },
+                    ],
+                    day4: [
+                        { id: 103, name: "Binary Tree Zigzag Level Order", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/binary-tree-zigzag-level-order-traversal/", description: "Binary Tree Zigzag Level Order", aim: "Master Trees - Foundation Part 2 patterns." },
+                        { id: 199, name: "Binary Tree Right Side View", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/binary-tree-right-side-view/", description: "Binary Tree Right Side View", aim: "Master Trees - Foundation Part 2 patterns." },
+                        { id: 515, name: "Find Largest Value in Each Tree Row", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/find-largest-value-in-each-tree-row/", description: "Find Largest Value in Each Tree Row", aim: "Master Trees - Foundation Part 2 patterns." },
+                    ],
+                    day5: [
+                        { id: 116, name: "Populating Next Right Pointers", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/populating-next-right-pointers-in-each-node/", description: "Populating Next Right Pointers", aim: "Master Trees - Foundation Part 2 patterns." },
+                        { id: 117, name: "Populating Next Right Pointers II", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/populating-next-right-pointers-in-each-node-ii/", description: "Populating Next Right Pointers II", aim: "Master Trees - Foundation Part 2 patterns." },
+                        { id: 314, name: "Binary Tree Vertical Order", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/binary-tree-vertical-order-traversal/", description: "Binary Tree Vertical Order", aim: "Master Trees - Foundation Part 2 patterns." },
+                        { id: 987, name: "Vertical Order Traversal", difficulty: "hard", priority: "", link: "https://leetcode.com/problems/vertical-order-traversal-of-a-binary-tree/", description: "Vertical Order Traversal", aim: "Master Trees - Foundation Part 2 patterns." },
+                        { id: 662, name: "Maximum Width of Binary Tree", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/maximum-width-of-binary-tree/", description: "Maximum Width of Binary Tree", aim: "Master Trees - Foundation Part 2 patterns." },
+                    ],
+                }
+            },
+            week13: {
+                title: "Binary Search Trees",
+                pattern: "BST properties, In-order traversal",
+                days: {
+                    day1: [
+                        { id: 700, name: "Search in a BST", difficulty: "easy", priority: "", link: "https://leetcode.com/problems/search-in-a-binary-search-tree/", description: "Search in a BST", aim: "Master Binary Search Trees patterns." },
+                        { id: 701, name: "Insert into a BST", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/insert-into-a-binary-search-tree/", description: "Insert into a BST", aim: "Master Binary Search Trees patterns." },
+                        { id: 450, name: "Delete Node in a BST", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/delete-node-in-a-bst/", description: "Delete Node in a BST", aim: "Master Binary Search Trees patterns." },
+                    ],
+                    day2: [
+                        { id: 98, name: "Validate Binary Search Tree", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/validate-binary-search-tree/", description: "Validate Binary Search Tree", aim: "Master Binary Search Trees patterns." },
+                        { id: 530, name: "Minimum Absolute Difference in BST", difficulty: "easy", priority: "", link: "https://leetcode.com/problems/minimum-absolute-difference-in-bst/", description: "Minimum Absolute Difference in BST", aim: "Master Binary Search Trees patterns." },
+                        { id: 501, name: "Find Mode in BST", difficulty: "easy", priority: "", link: "https://leetcode.com/problems/find-mode-in-binary-search-tree/", description: "Find Mode in BST", aim: "Master Binary Search Trees patterns." },
+                    ],
+                    day3: [
+                        { id: 230, name: "Kth Smallest Element in a BST", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/kth-smallest-element-in-a-bst/", description: "Kth Smallest Element in a BST", aim: "Master Binary Search Trees patterns." },
+                        { id: 538, name: "Convert BST to Greater Tree", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/convert-bst-to-greater-tree/", description: "Convert BST to Greater Tree", aim: "Master Binary Search Trees patterns." },
+                        { id: 1038, name: "BST to Greater Sum Tree", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/binary-search-tree-to-greater-sum-tree/", description: "BST to Greater Sum Tree", aim: "Master Binary Search Trees patterns." },
+                    ],
+                    day4: [
+                        { id: 108, name: "Convert Sorted Array to BST", difficulty: "easy", priority: "", link: "https://leetcode.com/problems/convert-sorted-array-to-binary-search-tree/", description: "Convert Sorted Array to BST", aim: "Master Binary Search Trees patterns." },
+                        { id: 109, name: "Convert Sorted List to BST", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/convert-sorted-list-to-binary-search-tree/", description: "Convert Sorted List to BST", aim: "Master Binary Search Trees patterns." },
+                        { id: 173, name: "BST Iterator", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/binary-search-tree-iterator/", description: "BST Iterator", aim: "Master Binary Search Trees patterns." },
+                    ],
+                    day5: [
+                        { id: 99, name: "Recover Binary Search Tree", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/recover-binary-search-tree/", description: "Recover Binary Search Tree", aim: "Master Binary Search Trees patterns." },
+                        { id: 285, name: "Inorder Successor in BST", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/inorder-successor-in-bst/", description: "Inorder Successor in BST", aim: "Master Binary Search Trees patterns." },
+                        { id: 510, name: "Inorder Successor in BST II", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/inorder-successor-in-bst-ii/", description: "Inorder Successor in BST II", aim: "Master Binary Search Trees patterns." },
+                    ],
+                }
+            },
+            week14: {
+                title: "Tree Construction & Serialization",
+                pattern: "Build trees, Serialize/Deserialize",
+                days: {
+                    day1: [
+                        { id: 105, name: "Construct Binary Tree from Preorder and Inorder", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/construct-binary-tree-from-preorder-and-inorder-traversal/", description: "Construct Binary Tree from Preorder and Inorder", aim: "Master Tree Construction & Serialization patterns." },
+                        { id: 106, name: "Construct Binary Tree from Inorder and Postorder", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/construct-binary-tree-from-inorder-and-postorder-traversal/", description: "Construct Binary Tree from Inorder and Postorder", aim: "Master Tree Construction & Serialization patterns." },
+                    ],
+                    day2: [
+                        { id: 889, name: "Construct Binary Tree from Preorder and Postorder", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/construct-binary-tree-from-preorder-and-postorder-traversal/", description: "Construct Binary Tree from Preorder and Postorder", aim: "Master Tree Construction & Serialization patterns." },
+                        { id: 297, name: "Serialize and Deserialize Binary Tree", difficulty: "hard", priority: "", link: "https://leetcode.com/problems/serialize-and-deserialize-binary-tree/", description: "Serialize and Deserialize Binary Tree", aim: "Master Tree Construction & Serialization patterns." },
+                    ],
+                    day3: [
+                        { id: 449, name: "Serialize and Deserialize BST", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/serialize-and-deserialize-bst/", description: "Serialize and Deserialize BST", aim: "Master Tree Construction & Serialization patterns." },
+                        { id: 428, name: "Serialize and Deserialize N-ary Tree", difficulty: "hard", priority: "", link: "https://leetcode.com/problems/serialize-and-deserialize-n-ary-tree/", description: "Serialize and Deserialize N-ary Tree", aim: "Master Tree Construction & Serialization patterns." },
+                    ],
+                    day4: [
+                        { id: 114, name: "Flatten Binary Tree to Linked List", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/flatten-binary-tree-to-linked-list/", description: "Flatten Binary Tree to Linked List", aim: "Master Tree Construction & Serialization patterns." },
+                        { id: 426, name: "Convert BST to Sorted Doubly Linked List", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/convert-binary-search-tree-to-sorted-doubly-linked-list/", description: "Convert BST to Sorted Doubly Linked List", aim: "Master Tree Construction & Serialization patterns." },
+                    ],
+                }
+            },
+            week15: {
+                title: "Recursion & Backtracking - Part 1",
+                pattern: "Generate, Permute, Combine",
+                days: {
+                    day1: [
+                        { id: 78, name: "Subsets", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/subsets/", description: "Subsets", aim: "Master Recursion & Backtracking - Part 1 patterns." },
+                        { id: 90, name: "Subsets II", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/subsets-ii/", description: "Subsets II", aim: "Master Recursion & Backtracking - Part 1 patterns." },
+                    ],
+                    day2: [
+                        { id: 46, name: "Permutations", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/permutations/", description: "Permutations", aim: "Master Recursion & Backtracking - Part 1 patterns." },
+                        { id: 47, name: "Permutations II", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/permutations-ii/", description: "Permutations II", aim: "Master Recursion & Backtracking - Part 1 patterns." },
+                    ],
+                    day3: [
+                        { id: 77, name: "Combinations", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/combinations/", description: "Combinations", aim: "Master Recursion & Backtracking - Part 1 patterns." },
+                        { id: 39, name: "Combination Sum", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/combination-sum/", description: "Combination Sum", aim: "Master Recursion & Backtracking - Part 1 patterns." },
+                        { id: 40, name: "Combination Sum II", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/combination-sum-ii/", description: "Combination Sum II", aim: "Master Recursion & Backtracking - Part 1 patterns." },
+                    ],
+                    day4: [
+                        { id: 216, name: "Combination Sum III", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/combination-sum-iii/", description: "Combination Sum III", aim: "Master Recursion & Backtracking - Part 1 patterns." },
+                        { id: 377, name: "Combination Sum IV", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/combination-sum-iv/", description: "Combination Sum IV", aim: "Master Recursion & Backtracking - Part 1 patterns." },
+                        { id: 17, name: "Letter Combinations of a Phone Number", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/letter-combinations-of-a-phone-number/", description: "Letter Combinations of a Phone Number", aim: "Master Recursion & Backtracking - Part 1 patterns." },
+                    ],
+                    day5: [
+                        { id: 22, name: "Generate Parentheses", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/generate-parentheses/", description: "Generate Parentheses", aim: "Master Recursion & Backtracking - Part 1 patterns." },
+                        { id: 131, name: "Palindrome Partitioning", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/palindrome-partitioning/", description: "Palindrome Partitioning", aim: "Master Recursion & Backtracking - Part 1 patterns." },
+                    ],
+                }
+            },
+            week16: {
+                title: "Recursion & Backtracking - Part 2 + Heaps",
+                pattern: "N-Queens, Sudoku, Word Search, Priority Queue",
+                days: {
+                    day1: [
+                        { id: 51, name: "N-Queens", difficulty: "hard", priority: "", link: "https://leetcode.com/problems/n-queens/", description: "N-Queens", aim: "Master Recursion & Backtracking - Part 2 + Heaps patterns." },
+                        { id: 52, name: "N-Queens II", difficulty: "hard", priority: "", link: "https://leetcode.com/problems/n-queens-ii/", description: "N-Queens II", aim: "Master Recursion & Backtracking - Part 2 + Heaps patterns." },
+                    ],
+                    day2: [
+                        { id: 37, name: "Sudoku Solver", difficulty: "hard", priority: "", link: "https://leetcode.com/problems/sudoku-solver/", description: "Sudoku Solver", aim: "Master Recursion & Backtracking - Part 2 + Heaps patterns." },
+                        { id: 79, name: "Word Search", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/word-search/", description: "Word Search", aim: "Master Recursion & Backtracking - Part 2 + Heaps patterns." },
+                    ],
+                    day3: [
+                        { id: 212, name: "Word Search II", difficulty: "hard", priority: "", link: "https://leetcode.com/problems/word-search-ii/", description: "Word Search II", aim: "Master Recursion & Backtracking - Part 2 + Heaps patterns." },
+                        { id: 93, name: "Restore IP Addresses", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/restore-ip-addresses/", description: "Restore IP Addresses", aim: "Master Recursion & Backtracking - Part 2 + Heaps patterns." },
+                    ],
+                    day4: [
+                        { id: 140, name: "Word Break II", difficulty: "hard", priority: "", link: "https://leetcode.com/problems/word-break-ii/", description: "Word Break II", aim: "Master Recursion & Backtracking - Part 2 + Heaps patterns." },
+                        { id: 842, name: "Split Array into Fibonacci Sequence", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/split-array-into-fibonacci-sequence/", description: "Split Array into Fibonacci Sequence", aim: "Master Recursion & Backtracking - Part 2 + Heaps patterns." },
+                    ],
+                    day5: [
+                        { id: 691, name: "Stickers to Spell Word", difficulty: "hard", priority: "", link: "https://leetcode.com/problems/stickers-to-spell-word/", description: "Stickers to Spell Word", aim: "Master Recursion & Backtracking - Part 2 + Heaps patterns." },
+                        { id: 996, name: "Number of Squareful Arrays", difficulty: "hard", priority: "", link: "https://leetcode.com/problems/number-of-squareful-arrays/", description: "Number of Squareful Arrays", aim: "Master Recursion & Backtracking - Part 2 + Heaps patterns." },
+                    ],
+                    day6: [
+                        { id: 703, name: "Kth Largest Element in a Stream", difficulty: "easy", priority: "", link: "https://leetcode.com/problems/kth-largest-element-in-a-stream/", description: "Kth Largest Element in a Stream", aim: "Master Recursion & Backtracking - Part 2 + Heaps patterns." },
+                        { id: 1046, name: "Last Stone Weight", difficulty: "easy", priority: "", link: "https://leetcode.com/problems/last-stone-weight/", description: "Last Stone Weight", aim: "Master Recursion & Backtracking - Part 2 + Heaps patterns." },
+                        { id: 767, name: "Reorganize String", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/reorganize-string/", description: "Reorganize String", aim: "Master Recursion & Backtracking - Part 2 + Heaps patterns." },
+                    ],
+                    day7: [
+                        { id: 621, name: "Task Scheduler", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/task-scheduler/", description: "Task Scheduler", aim: "Master Recursion & Backtracking - Part 2 + Heaps patterns." },
+                        { id: 355, name: "Design Twitter", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/design-twitter/", description: "Design Twitter", aim: "Master Recursion & Backtracking - Part 2 + Heaps patterns." },
+                        { id: 295, name: "Find Median from Data Stream", difficulty: "hard", priority: "", link: "https://leetcode.com/problems/find-median-from-data-stream/", description: "Find Median from Data Stream", aim: "Master Recursion & Backtracking - Part 2 + Heaps patterns." },
+                        { id: 480, name: "Sliding Window Median", difficulty: "hard", priority: "", link: "https://leetcode.com/problems/sliding-window-median/", description: "Sliding Window Median", aim: "Master Recursion & Backtracking - Part 2 + Heaps patterns." },
+                        { id: 502, name: "IPO", difficulty: "hard", priority: "", link: "https://leetcode.com/problems/ipo/", description: "IPO", aim: "Master Recursion & Backtracking - Part 2 + Heaps patterns." },
+                        { id: 630, name: "Course Schedule III", difficulty: "hard", priority: "", link: "https://leetcode.com/problems/course-schedule-iii/", description: "Course Schedule III", aim: "Master Recursion & Backtracking - Part 2 + Heaps patterns." },
+                        { id: 1353, name: "Maximum Number of Events", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/maximum-number-of-events-that-can-be-attended/", description: "Maximum Number of Events", aim: "Master Recursion & Backtracking - Part 2 + Heaps patterns." },
+                        { id: 218, name: "The Skyline Problem", difficulty: "hard", priority: "", link: "https://leetcode.com/problems/the-skyline-problem/", description: "The Skyline Problem", aim: "Master Recursion & Backtracking - Part 2 + Heaps patterns." },
+                        { id: 407, name: "Trapping Rain Water II", difficulty: "hard", priority: "", link: "https://leetcode.com/problems/trapping-rain-water-ii/", description: "Trapping Rain Water II", aim: "Master Recursion & Backtracking - Part 2 + Heaps patterns." },
+                        { id: 778, name: "Swim in Rising Water", difficulty: "hard", priority: "", link: "https://leetcode.com/problems/swim-in-rising-water/", description: "Swim in Rising Water", aim: "Master Recursion & Backtracking - Part 2 + Heaps patterns." },
+                        { id: 1642, name: "Furthest Building You Can Reach", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/furthest-building-you-can-reach/", description: "Furthest Building You Can Reach", aim: "Master Recursion & Backtracking - Part 2 + Heaps patterns." },
+                        { id: 1675, name: "Minimize Deviation in Array", difficulty: "hard", priority: "", link: "https://leetcode.com/problems/minimize-deviation-in-array/", description: "Minimize Deviation in Array", aim: "Master Recursion & Backtracking - Part 2 + Heaps patterns." },
+                    ],
+                }
+            },
+            week17: {
+                title: "Graphs - DFS/BFS Basics",
+                pattern: "Graph traversal, Connected components",
+                days: {
+                    day1: [
+                        { id: 200, name: "Number of Islands", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/number-of-islands/", description: "Number of Islands", aim: "Master Graphs - DFS/BFS Basics patterns." },
+                        { id: 695, name: "Max Area of Island", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/max-area-of-island/", description: "Max Area of Island", aim: "Master Graphs - DFS/BFS Basics patterns." },
+                    ],
+                    day2: [
+                        { id: 133, name: "Clone Graph", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/clone-graph/", description: "Clone Graph", aim: "Master Graphs - DFS/BFS Basics patterns." },
+                        { id: 797, name: "All Paths From Source to Target", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/all-paths-from-source-to-target/", description: "All Paths From Source to Target", aim: "Master Graphs - DFS/BFS Basics patterns." },
+                    ],
+                    day3: [
+                        { id: 733, name: "Flood Fill", difficulty: "easy", priority: "", link: "https://leetcode.com/problems/flood-fill/", description: "Flood Fill", aim: "Master Graphs - DFS/BFS Basics patterns." },
+                        { id: 130, name: "Surrounded Regions", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/surrounded-regions/", description: "Surrounded Regions", aim: "Master Graphs - DFS/BFS Basics patterns." },
+                        { id: 417, name: "Pacific Atlantic Water Flow", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/pacific-atlantic-water-flow/", description: "Pacific Atlantic Water Flow", aim: "Master Graphs - DFS/BFS Basics patterns." },
+                    ],
+                    day4: [
+                        { id: 207, name: "Course Schedule", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/course-schedule/", description: "Course Schedule", aim: "Master Graphs - DFS/BFS Basics patterns." },
+                        { id: 210, name: "Course Schedule II", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/course-schedule-ii/", description: "Course Schedule II", aim: "Master Graphs - DFS/BFS Basics patterns." },
+                    ],
+                    day5: [
+                        { id: 547, name: "Number of Provinces", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/number-of-provinces/", description: "Number of Provinces", aim: "Master Graphs - DFS/BFS Basics patterns." },
+                        { id: 323, name: "Number of Connected Components", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/number-of-connected-components-in-an-undirected-graph/", description: "Number of Connected Components", aim: "Master Graphs - DFS/BFS Basics patterns." },
+                        { id: 684, name: "Redundant Connection", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/redundant-connection/", description: "Redundant Connection", aim: "Master Graphs - DFS/BFS Basics patterns." },
+                        { id: 685, name: "Redundant Connection II", difficulty: "hard", priority: "", link: "https://leetcode.com/problems/redundant-connection-ii/", description: "Redundant Connection II", aim: "Master Graphs - DFS/BFS Basics patterns." },
+                        { id: 261, name: "Graph Valid Tree", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/graph-valid-tree/", description: "Graph Valid Tree", aim: "Master Graphs - DFS/BFS Basics patterns." },
+                        { id: 1101, name: "The Earliest Moment", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/the-earliest-moment-when-everyone-become-friends/", description: "The Earliest Moment", aim: "Master Graphs - DFS/BFS Basics patterns." },
+                    ],
+                }
+            },
+            week18: {
+                title: "Union Find & Topological Sort",
+                pattern: "Disjoint sets, Cycle detection",
+                days: {
+                    day1: [
+                        { id: 990, name: "Satisfiability of Equality Equations", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/satisfiability-of-equality-equations/", description: "Satisfiability of Equality Equations", aim: "Master Union Find & Topological Sort patterns." },
+                        { id: 721, name: "Accounts Merge", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/accounts-merge/", description: "Accounts Merge", aim: "Master Union Find & Topological Sort patterns." },
+                    ],
+                    day2: [
+                        { id: 1202, name: "Smallest String With Swaps", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/smallest-string-with-swaps/", description: "Smallest String With Swaps", aim: "Master Union Find & Topological Sort patterns." },
+                        { id: 1319, name: "Number of Operations", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/number-of-operations-to-make-network-connected/", description: "Number of Operations", aim: "Master Union Find & Topological Sort patterns." },
+                    ],
+                    day3: [
+                        { id: 1584, name: "Min Cost to Connect All Points", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/min-cost-to-connect-all-points/", description: "Min Cost to Connect All Points", aim: "Master Union Find & Topological Sort patterns." },
+                        { id: 1168, name: "Optimize Water Distribution", difficulty: "hard", priority: "", link: "https://leetcode.com/problems/optimize-water-distribution-in-a-village/", description: "Optimize Water Distribution", aim: "Master Union Find & Topological Sort patterns." },
+                    ],
+                    day4: [
+                        { id: 269, name: "Alien Dictionary", difficulty: "hard", priority: "", link: "https://leetcode.com/problems/alien-dictionary/", description: "Alien Dictionary", aim: "Master Union Find & Topological Sort patterns." },
+                        { id: 310, name: "Minimum Height Trees", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/minimum-height-trees/", description: "Minimum Height Trees", aim: "Master Union Find & Topological Sort patterns." },
+                    ],
+                    day5: [
+                        { id: 444, name: "Sequence Reconstruction", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/sequence-reconstruction/", description: "Sequence Reconstruction", aim: "Master Union Find & Topological Sort patterns." },
+                        { id: 1136, name: "Parallel Courses", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/parallel-courses/", description: "Parallel Courses", aim: "Master Union Find & Topological Sort patterns." },
+                    ],
+                }
+            },
+            week19: {
+                title: "Shortest Path & Advanced Graph",
+                pattern: "Dijkstra, Bellman-Ford, Floyd-Warshall",
+                days: {
+                    day1: [
+                        { id: 743, name: "Network Delay Time", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/network-delay-time/", description: "Network Delay Time", aim: "Master Shortest Path & Advanced Graph patterns." },
+                        { id: 787, name: "Cheapest Flights Within K Stops", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/cheapest-flights-within-k-stops/", description: "Cheapest Flights Within K Stops", aim: "Master Shortest Path & Advanced Graph patterns." },
+                    ],
+                    day2: [
+                        { id: 1334, name: "Find the City", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/find-the-city-with-the-smallest-number-of-neighbors-at-a-threshold-distance/", description: "Find the City", aim: "Master Shortest Path & Advanced Graph patterns." },
+                        { id: 1514, name: "Path with Maximum Probability", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/path-with-maximum-probability/", description: "Path with Maximum Probability", aim: "Master Shortest Path & Advanced Graph patterns." },
+                    ],
+                    day3: [
+                        { id: 1631, name: "Path With Minimum Effort", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/path-with-minimum-effort/", description: "Path With Minimum Effort", aim: "Master Shortest Path & Advanced Graph patterns." },
+                        { id: 1368, name: "Minimum Cost to Make at Least One Valid Path", difficulty: "hard", priority: "", link: "https://leetcode.com/problems/minimum-cost-to-make-at-least-one-valid-path-in-a-grid/", description: "Minimum Cost to Make at Least One Valid Path", aim: "Master Shortest Path & Advanced Graph patterns." },
+                    ],
+                    day4: [
+                        { id: 847, name: "Shortest Path Visiting All Nodes", difficulty: "hard", priority: "", link: "https://leetcode.com/problems/shortest-path-visiting-all-nodes/", description: "Shortest Path Visiting All Nodes", aim: "Master Shortest Path & Advanced Graph patterns." },
+                        { id: 1293, name: "Shortest Path in a Grid", difficulty: "hard", priority: "", link: "https://leetcode.com/problems/shortest-path-in-a-grid-with-obstacles-elimination/", description: "Shortest Path in a Grid", aim: "Master Shortest Path & Advanced Graph patterns." },
+                    ],
+                    day5: [
+                        { id: 1091, name: "Shortest Path in Binary Matrix", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/shortest-path-in-binary-matrix/", description: "Shortest Path in Binary Matrix", aim: "Master Shortest Path & Advanced Graph patterns." },
+                        { id: 542, name: "01 Matrix", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/01-matrix/", description: "01 Matrix", aim: "Master Shortest Path & Advanced Graph patterns." },
+                    ],
+                }
+            },
+            week20: {
+                title: "Dynamic Programming - Foundation",
+                pattern: "1D DP, Fibonacci, Climbing stairs",
+                days: {
+                    day1: [
+                        { id: 70, name: "Climbing Stairs", difficulty: "easy", priority: "", link: "https://leetcode.com/problems/climbing-stairs/", description: "Climbing Stairs", aim: "Master Dynamic Programming - Foundation patterns." },
+                        { id: 746, name: "Min Cost Climbing Stairs", difficulty: "easy", priority: "", link: "https://leetcode.com/problems/min-cost-climbing-stairs/", description: "Min Cost Climbing Stairs", aim: "Master Dynamic Programming - Foundation patterns." },
+                        { id: 509, name: "Fibonacci Number", difficulty: "easy", priority: "", link: "https://leetcode.com/problems/fibonacci-number/", description: "Fibonacci Number", aim: "Master Dynamic Programming - Foundation patterns." },
+                    ],
+                    day2: [
+                        { id: 198, name: "House Robber", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/house-robber/", description: "House Robber", aim: "Master Dynamic Programming - Foundation patterns." },
+                        { id: 213, name: "House Robber II", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/house-robber-ii/", description: "House Robber II", aim: "Master Dynamic Programming - Foundation patterns." },
+                        { id: 337, name: "House Robber III", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/house-robber-iii/", description: "House Robber III", aim: "Master Dynamic Programming - Foundation patterns." },
+                    ],
+                    day3: [
+                        { id: 53, name: "Maximum Subarray", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/maximum-subarray/", description: "Maximum Subarray", aim: "Master Dynamic Programming - Foundation patterns." },
+                        { id: 152, name: "Maximum Product Subarray", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/maximum-product-subarray/", description: "Maximum Product Subarray", aim: "Master Dynamic Programming - Foundation patterns." },
+                        { id: 918, name: "Maximum Sum Circular Subarray", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/maximum-sum-circular-subarray/", description: "Maximum Sum Circular Subarray", aim: "Master Dynamic Programming - Foundation patterns." },
+                    ],
+                    day4: [
+                        { id: 300, name: "Longest Increasing Subsequence", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/longest-increasing-subsequence/", description: "Longest Increasing Subsequence", aim: "Master Dynamic Programming - Foundation patterns." },
+                        { id: 673, name: "Number of Longest Increasing Subsequence", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/number-of-longest-increasing-subsequence/", description: "Number of Longest Increasing Subsequence", aim: "Master Dynamic Programming - Foundation patterns." },
+                        { id: 354, name: "Russian Doll Envelopes", difficulty: "hard", priority: "", link: "https://leetcode.com/problems/russian-doll-envelopes/", description: "Russian Doll Envelopes", aim: "Master Dynamic Programming - Foundation patterns." },
+                    ],
+                    day5: [
+                        { id: 139, name: "Word Break", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/word-break/", description: "Word Break", aim: "Master Dynamic Programming - Foundation patterns." },
+                        { id: 322, name: "Coin Change", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/coin-change/", description: "Coin Change", aim: "Master Dynamic Programming - Foundation patterns." },
+                        { id: 518, name: "Coin Change II", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/coin-change-ii/", description: "Coin Change II", aim: "Master Dynamic Programming - Foundation patterns." },
+                        { id: 279, name: "Perfect Squares", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/perfect-squares/", description: "Perfect Squares", aim: "Master Dynamic Programming - Foundation patterns." },
+                        { id: 343, name: "Integer Break", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/integer-break/", description: "Integer Break", aim: "Master Dynamic Programming - Foundation patterns." },
+                        { id: 96, name: "Unique Binary Search Trees", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/unique-binary-search-trees/", description: "Unique Binary Search Trees", aim: "Master Dynamic Programming - Foundation patterns." },
+                        { id: 91, name: "Decode Ways", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/decode-ways/", description: "Decode Ways", aim: "Master Dynamic Programming - Foundation patterns." },
+                        { id: 62, name: "Unique Paths", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/unique-paths/", description: "Unique Paths", aim: "Master Dynamic Programming - Foundation patterns." },
+                    ],
+                }
+            },
+            week21: {
+                title: "Dynamic Programming - Advanced",
+                pattern: "2D DP, Grid, Knapsack",
+                days: {
+                    day1: [
+                        { id: 63, name: "Unique Paths II", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/unique-paths-ii/", description: "Unique Paths II", aim: "Master Dynamic Programming - Advanced patterns." },
+                        { id: 64, name: "Minimum Path Sum", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/minimum-path-sum/", description: "Minimum Path Sum", aim: "Master Dynamic Programming - Advanced patterns." },
+                        { id: 120, name: "Triangle", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/triangle/", description: "Triangle", aim: "Master Dynamic Programming - Advanced patterns." },
+                    ],
+                    day2: [
+                        { id: 221, name: "Maximal Square", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/maximal-square/", description: "Maximal Square", aim: "Master Dynamic Programming - Advanced patterns." },
+                        { id: 1277, name: "Count Square Submatrices", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/count-square-submatrices-with-all-ones/", description: "Count Square Submatrices", aim: "Master Dynamic Programming - Advanced patterns." },
+                        { id: 85, name: "Maximal Rectangle", difficulty: "hard", priority: "", link: "https://leetcode.com/problems/maximal-rectangle/", description: "Maximal Rectangle", aim: "Master Dynamic Programming - Advanced patterns." },
+                    ],
+                    day3: [
+                        { id: 72, name: "Edit Distance", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/edit-distance/", description: "Edit Distance", aim: "Master Dynamic Programming - Advanced patterns." },
+                        { id: 583, name: "Delete Operation for Two Strings", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/delete-operation-for-two-strings/", description: "Delete Operation for Two Strings", aim: "Master Dynamic Programming - Advanced patterns." },
+                        { id: 712, name: "Minimum ASCII Delete Sum", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/minimum-ascii-delete-sum-for-two-strings/", description: "Minimum ASCII Delete Sum", aim: "Master Dynamic Programming - Advanced patterns." },
+                    ],
+                    day4: [
+                        { id: 1143, name: "Longest Common Subsequence", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/longest-common-subsequence/", description: "Longest Common Subsequence", aim: "Master Dynamic Programming - Advanced patterns." },
+                        { id: 1092, name: "Shortest Common Supersequence", difficulty: "hard", priority: "", link: "https://leetcode.com/problems/shortest-common-supersequence/", description: "Shortest Common Supersequence", aim: "Master Dynamic Programming - Advanced patterns." },
+                        { id: 516, name: "Longest Palindromic Subsequence", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/longest-palindromic-subsequence/", description: "Longest Palindromic Subsequence", aim: "Master Dynamic Programming - Advanced patterns." },
+                    ],
+                    day5: [
+                        { id: 5, name: "Longest Palindromic Substring", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/longest-palindromic-substring/", description: "Longest Palindromic Substring", aim: "Master Dynamic Programming - Advanced patterns." },
+                        { id: 647, name: "Palindromic Substrings", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/palindromic-substrings/", description: "Palindromic Substrings", aim: "Master Dynamic Programming - Advanced patterns." },
+                        { id: 1312, name: "Minimum Insertion Steps", difficulty: "hard", priority: "", link: "https://leetcode.com/problems/minimum-insertion-steps-to-make-a-string-palindrome/", description: "Minimum Insertion Steps", aim: "Master Dynamic Programming - Advanced patterns." },
+                        { id: 10, name: "Regular Expression Matching", difficulty: "hard", priority: "", link: "https://leetcode.com/problems/regular-expression-matching/", description: "Regular Expression Matching", aim: "Master Dynamic Programming - Advanced patterns." },
+                        { id: 44, name: "Wildcard Matching", difficulty: "hard", priority: "", link: "https://leetcode.com/problems/wildcard-matching/", description: "Wildcard Matching", aim: "Master Dynamic Programming - Advanced patterns." },
+                        { id: 97, name: "Interleaving String", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/interleaving-string/", description: "Interleaving String", aim: "Master Dynamic Programming - Advanced patterns." },
+                        { id: 115, name: "Distinct Subsequences", difficulty: "hard", priority: "", link: "https://leetcode.com/problems/distinct-subsequences/", description: "Distinct Subsequences", aim: "Master Dynamic Programming - Advanced patterns." },
+                        { id: 87, name: "Scramble String", difficulty: "hard", priority: "", link: "https://leetcode.com/problems/scramble-string/", description: "Scramble String", aim: "Master Dynamic Programming - Advanced patterns." },
+                    ],
+                }
+            },
+            week22: {
+                title: "Dynamic Programming - Hard Patterns",
+                pattern: "Partition, Stock, Game theory",
+                days: {
+                    day1: [
+                        { id: 132, name: "Palindrome Partitioning II", difficulty: "hard", priority: "", link: "https://leetcode.com/problems/palindrome-partitioning-ii/", description: "Palindrome Partitioning II", aim: "Master Dynamic Programming - Hard Patterns patterns." },
+                        { id: 1278, name: "Palindrome Partitioning III", difficulty: "hard", priority: "", link: "https://leetcode.com/problems/palindrome-partitioning-iii/", description: "Palindrome Partitioning III", aim: "Master Dynamic Programming - Hard Patterns patterns." },
+                    ],
+                    day2: [
+                        { id: 123, name: "Best Time to Buy and Sell Stock III", difficulty: "hard", priority: "", link: "https://leetcode.com/problems/best-time-to-buy-and-sell-stock-iii/", description: "Best Time to Buy and Sell Stock III", aim: "Master Dynamic Programming - Hard Patterns patterns." },
+                        { id: 188, name: "Best Time to Buy and Sell Stock IV", difficulty: "hard", priority: "", link: "https://leetcode.com/problems/best-time-to-buy-and-sell-stock-iv/", description: "Best Time to Buy and Sell Stock IV", aim: "Master Dynamic Programming - Hard Patterns patterns." },
+                        { id: 309, name: "Best Time with Cooldown", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/best-time-to-buy-and-sell-stock-with-cooldown/", description: "Best Time with Cooldown", aim: "Master Dynamic Programming - Hard Patterns patterns." },
+                    ],
+                    day3: [
+                        { id: 714, name: "Best Time with Transaction Fee", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/best-time-to-buy-and-sell-stock-with-transaction-fee/", description: "Best Time with Transaction Fee", aim: "Master Dynamic Programming - Hard Patterns patterns." },
+                        { id: 1049, name: "Last Stone Weight II", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/last-stone-weight-ii/", description: "Last Stone Weight II", aim: "Master Dynamic Programming - Hard Patterns patterns." },
+                        { id: 494, name: "Target Sum", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/target-sum/", description: "Target Sum", aim: "Master Dynamic Programming - Hard Patterns patterns." },
+                    ],
+                    day4: [
+                        { id: 486, name: "Predict the Winner", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/predict-the-winner/", description: "Predict the Winner", aim: "Master Dynamic Programming - Hard Patterns patterns." },
+                        { id: 877, name: "Stone Game", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/stone-game/", description: "Stone Game", aim: "Master Dynamic Programming - Hard Patterns patterns." },
+                        { id: 1140, name: "Stone Game II", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/stone-game-ii/", description: "Stone Game II", aim: "Master Dynamic Programming - Hard Patterns patterns." },
+                    ],
+                    day5: [
+                        { id: 312, name: "Burst Balloons", difficulty: "hard", priority: "", link: "https://leetcode.com/problems/burst-balloons/", description: "Burst Balloons", aim: "Master Dynamic Programming - Hard Patterns patterns." },
+                        { id: 1000, name: "Minimum Cost to Merge Stones", difficulty: "hard", priority: "", link: "https://leetcode.com/problems/minimum-cost-to-merge-stones/", description: "Minimum Cost to Merge Stones", aim: "Master Dynamic Programming - Hard Patterns patterns." },
+                        { id: 1547, name: "Minimum Cost to Cut a Stick", difficulty: "hard", priority: "", link: "https://leetcode.com/problems/minimum-cost-to-cut-a-stick/", description: "Minimum Cost to Cut a Stick", aim: "Master Dynamic Programming - Hard Patterns patterns." },
+                        { id: 1039, name: "Minimum Score Triangulation", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/minimum-score-triangulation-of-polygon/", description: "Minimum Score Triangulation", aim: "Master Dynamic Programming - Hard Patterns patterns." },
+                    ],
+                }
+            },
+            week23: {
+                title: "Advanced Data Structures",
+                pattern: "Trie, Segment Tree, Binary Indexed Tree",
+                days: {
+                    day1: [
+                        { id: 208, name: "Implement Trie", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/implement-trie-prefix-tree/", description: "Implement Trie", aim: "Master Advanced Data Structures patterns." },
+                        { id: 211, name: "Design Add and Search Words", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/design-add-and-search-words-data-structure/", description: "Design Add and Search Words", aim: "Master Advanced Data Structures patterns." },
+                        { id: 648, name: "Replace Words", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/replace-words/", description: "Replace Words", aim: "Master Advanced Data Structures patterns." },
+                    ],
+                    day2: [
+                        { id: 677, name: "Map Sum Pairs", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/map-sum-pairs/", description: "Map Sum Pairs", aim: "Master Advanced Data Structures patterns." },
+                        { id: 1804, name: "Implement Trie II", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/implement-trie-ii-prefix-tree/", description: "Implement Trie II", aim: "Master Advanced Data Structures patterns." },
+                        { id: 720, name: "Longest Word in Dictionary", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/longest-word-in-dictionary/", description: "Longest Word in Dictionary", aim: "Master Advanced Data Structures patterns." },
+                    ],
+                    day3: [
+                        { id: 146, name: "LRU Cache", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/lru-cache/", description: "LRU Cache", aim: "Master Advanced Data Structures patterns." },
+                        { id: 460, name: "LFU Cache", difficulty: "hard", priority: "", link: "https://leetcode.com/problems/lfu-cache/", description: "LFU Cache", aim: "Master Advanced Data Structures patterns." },
+                    ],
+                    day4: [
+                        { id: 307, name: "Range Sum Query - Mutable", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/range-sum-query-mutable/", description: "Range Sum Query - Mutable", aim: "Master Advanced Data Structures patterns." },
+                        { id: 308, name: "Range Sum Query 2D - Mutable", difficulty: "hard", priority: "", link: "https://leetcode.com/problems/range-sum-query-2d-mutable/", description: "Range Sum Query 2D - Mutable", aim: "Master Advanced Data Structures patterns." },
+                    ],
+                    day5: [
+                        { id: 315, name: "Count of Smaller Numbers After Self", difficulty: "hard", priority: "", link: "https://leetcode.com/problems/count-of-smaller-numbers-after-self/", description: "Count of Smaller Numbers After Self", aim: "Master Advanced Data Structures patterns." },
+                        { id: 327, name: "Count of Range Sum", difficulty: "hard", priority: "", link: "https://leetcode.com/problems/count-of-range-sum/", description: "Count of Range Sum", aim: "Master Advanced Data Structures patterns." },
+                        { id: 493, name: "Reverse Pairs", difficulty: "hard", priority: "", link: "https://leetcode.com/problems/reverse-pairs/", description: "Reverse Pairs", aim: "Master Advanced Data Structures patterns." },
+                        { id: 218, name: "The Skyline Problem", difficulty: "hard", priority: "", link: "https://leetcode.com/problems/the-skyline-problem/", description: "The Skyline Problem", aim: "Master Advanced Data Structures patterns." },
+                        { id: 850, name: "Rectangle Area II", difficulty: "hard", priority: "", link: "https://leetcode.com/problems/rectangle-area-ii/", description: "Rectangle Area II", aim: "Master Advanced Data Structures patterns." },
+                    ],
+                }
+            },
+            week24: {
+                title: "Hard Mixed Problems",
+                pattern: "Review and challenge",
+                days: {
+                    day1: [
+                        { id: 4, name: "Median of Two Sorted Arrays", difficulty: "hard", priority: "", link: "https://leetcode.com/problems/median-of-two-sorted-arrays/", description: "Median of Two Sorted Arrays", aim: "Master Hard Mixed Problems patterns." },
+                        { id: 23, name: "Merge k Sorted Lists", difficulty: "hard", priority: "", link: "https://leetcode.com/problems/merge-k-sorted-lists/", description: "Merge k Sorted Lists", aim: "Master Hard Mixed Problems patterns." },
+                    ],
+                    day2: [
+                        { id: 42, name: "Trapping Rain Water", difficulty: "hard", priority: "", link: "https://leetcode.com/problems/trapping-rain-water/", description: "Trapping Rain Water", aim: "Master Hard Mixed Problems patterns." },
+                        { id: 84, name: "Largest Rectangle in Histogram", difficulty: "hard", priority: "", link: "https://leetcode.com/problems/largest-rectangle-in-histogram/", description: "Largest Rectangle in Histogram", aim: "Master Hard Mixed Problems patterns." },
+                    ],
+                    day3: [
+                        { id: 239, name: "Sliding Window Maximum", difficulty: "hard", priority: "", link: "https://leetcode.com/problems/sliding-window-maximum/", description: "Sliding Window Maximum", aim: "Master Hard Mixed Problems patterns." },
+                        { id: 297, name: "Serialize and Deserialize Binary Tree", difficulty: "hard", priority: "", link: "https://leetcode.com/problems/serialize-and-deserialize-binary-tree/", description: "Serialize and Deserialize Binary Tree", aim: "Master Hard Mixed Problems patterns." },
+                    ],
+                    day4: [
+                        { id: 1235, name: "Maximum Profit in Job Scheduling", difficulty: "hard", priority: "", link: "https://leetcode.com/problems/maximum-profit-in-job-scheduling/", description: "Maximum Profit in Job Scheduling", aim: "Master Hard Mixed Problems patterns." },
+                        { id: 295, name: "Find Median from Data Stream", difficulty: "hard", priority: "", link: "https://leetcode.com/problems/find-median-from-data-stream/", description: "Find Median from Data Stream", aim: "Master Hard Mixed Problems patterns." },
+                    ],
+                    day5: [
+                        { id: 460, name: "LFU Cache", difficulty: "hard", priority: "", link: "https://leetcode.com/problems/lfu-cache/", description: "LFU Cache", aim: "Master Hard Mixed Problems patterns." },
+                        { id: 127, name: "Word Ladder", difficulty: "hard", priority: "", link: "https://leetcode.com/problems/word-ladder/", description: "Word Ladder", aim: "Master Hard Mixed Problems patterns." },
+                        { id: 126, name: "Word Ladder II", difficulty: "hard", priority: "", link: "https://leetcode.com/problems/word-ladder-ii/", description: "Word Ladder II", aim: "Master Hard Mixed Problems patterns." },
+                        { id: 1206, name: "Design Skiplist", difficulty: "hard", priority: "", link: "https://leetcode.com/problems/design-skiplist/", description: "Design Skiplist", aim: "Master Hard Mixed Problems patterns." },
+                        { id: 432, name: "All O`one Data Structure", difficulty: "hard", priority: "", link: "https://leetcode.com/problems/all-oone-data-structure/", description: "All O`one Data Structure", aim: "Master Hard Mixed Problems patterns." },
+                        { id: 895, name: "Maximum Frequency Stack", difficulty: "hard", priority: "", link: "https://leetcode.com/problems/maximum-frequency-stack/", description: "Maximum Frequency Stack", aim: "Master Hard Mixed Problems patterns." },
+                        { id: 1622, name: "Fancy Sequence", difficulty: "hard", priority: "", link: "https://leetcode.com/problems/fancy-sequence/", description: "Fancy Sequence", aim: "Master Hard Mixed Problems patterns." },
+                    ],
+                }
+            },
+            week25: {
+                title: "Hardest DP & Recursion",
+                pattern: "Expert level challenges",
+                days: {
+                    day1: [
+                        { id: 1463, name: "Cherry Pickup II", difficulty: "hard", priority: "", link: "https://leetcode.com/problems/cherry-pickup-ii/", description: "Cherry Pickup II", aim: "Master Hardest DP & Recursion patterns." },
+                        { id: 741, name: "Cherry Pickup", difficulty: "hard", priority: "", link: "https://leetcode.com/problems/cherry-pickup/", description: "Cherry Pickup", aim: "Master Hardest DP & Recursion patterns." },
+                    ],
+                    day2: [
+                        { id: 1444, name: "Number of Ways of Cutting a Pizza", difficulty: "hard", priority: "", link: "https://leetcode.com/problems/number-of-ways-of-cutting-a-pizza/", description: "Number of Ways of Cutting a Pizza", aim: "Master Hardest DP & Recursion patterns." },
+                        { id: 1510, name: "Stone Game IV", difficulty: "hard", priority: "", link: "https://leetcode.com/problems/stone-game-iv/", description: "Stone Game IV", aim: "Master Hardest DP & Recursion patterns." },
+                    ],
+                    day3: [
+                        { id: 1563, name: "Stone Game V", difficulty: "hard", priority: "", link: "https://leetcode.com/problems/stone-game-v/", description: "Stone Game V", aim: "Master Hardest DP & Recursion patterns." },
+                        { id: 1686, name: "Stone Game VI", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/stone-game-vi/", description: "Stone Game VI", aim: "Master Hardest DP & Recursion patterns." },
+                    ],
+                    day4: [
+                        { id: 1872, name: "Stone Game VIII", difficulty: "hard", priority: "", link: "https://leetcode.com/problems/stone-game-viii/", description: "Stone Game VIII", aim: "Master Hardest DP & Recursion patterns." },
+                        { id: 1406, name: "Stone Game III", difficulty: "hard", priority: "", link: "https://leetcode.com/problems/stone-game-iii/", description: "Stone Game III", aim: "Master Hardest DP & Recursion patterns." },
+                    ],
+                    day5: [
+                        { id: 1770, name: "Maximum Score from Performing Multiplication", difficulty: "hard", priority: "", link: "https://leetcode.com/problems/maximum-score-from-performing-multiplication-operations/", description: "Maximum Score from Performing Multiplication", aim: "Master Hardest DP & Recursion patterns." },
+                        { id: 1937, name: "Maximum Number of Points with Cost", difficulty: "medium", priority: "", link: "https://leetcode.com/problems/maximum-number-of-points-with-cost/", description: "Maximum Number of Points with Cost", aim: "Master Hardest DP & Recursion patterns." },
+                    ],
+                }
+            },
+            week26: {
+                title: "Final Review & Mixed Hard",
+                pattern: "Comprehensive review",
+                days: {
+                    day1: [
+                        { id: 1923, name: "Longest Common Subpath", difficulty: "hard", priority: "", link: "https://leetcode.com/problems/longest-common-subpath/", description: "Longest Common Subpath", aim: "Master Final Review & Mixed Hard patterns." },
+                        { id: 1955, name: "Count Number of Special Subsequences", difficulty: "hard", priority: "", link: "https://leetcode.com/problems/count-number-of-special-subsequences/", description: "Count Number of Special Subsequences", aim: "Master Final Review & Mixed Hard patterns." },
+                    ],
+                    day2: [
+                        { id: 1987, name: "Number of Unique Good Subsequences", difficulty: "hard", priority: "", link: "https://leetcode.com/problems/number-of-unique-good-subsequences/", description: "Number of Unique Good Subsequences", aim: "Master Final Review & Mixed Hard patterns." },
+                        { id: 2009, name: "Minimum Number of Operations", difficulty: "hard", priority: "", link: "https://leetcode.com/problems/minimum-number-of-operations-to-make-array-continuous/", description: "Minimum Number of Operations", aim: "Master Final Review & Mixed Hard patterns." },
+                    ],
+                    day3: [
+                        { id: 2019, name: "The Score of Students Solving Math Expression", difficulty: "hard", priority: "", link: "https://leetcode.com/problems/the-score-of-students-solving-math-expression/", description: "The Score of Students Solving Math Expression", aim: "Master Final Review & Mixed Hard patterns." },
+                        { id: 2050, name: "Parallel Courses III", difficulty: "hard", priority: "", link: "https://leetcode.com/problems/parallel-courses-iii/", description: "Parallel Courses III", aim: "Master Final Review & Mixed Hard patterns." },
+                    ],
+                    day4: [
+                        { id: 2060, name: "Check if an Original String Exists", difficulty: "hard", priority: "", link: "https://leetcode.com/problems/check-if-an-original-string-exists-given-two-encoded-strings/", description: "Check if an Original String Exists", aim: "Master Final Review & Mixed Hard patterns." },
+                        { id: 2088, name: "Count Fertile Pyramids", difficulty: "hard", priority: "", link: "https://leetcode.com/problems/count-fertile-pyramids-in-a-land/", description: "Count Fertile Pyramids", aim: "Master Final Review & Mixed Hard patterns." },
+                    ],
+                    day5: [
+                        { id: 2092, name: "Find All People With Secret", difficulty: "hard", priority: "", link: "https://leetcode.com/problems/find-all-people-with-secret/", description: "Find All People With Secret", aim: "Master Final Review & Mixed Hard patterns." },
+                    ],
+                }
+            },
+            week27: {
+                title: "Add-on: Missing Patterns",
+                pattern: "Bit Manipulation, Prefix Sum, Union Find, Math",
+                days: {
+                    day1: [
+                        { id: 191, name: "Number of 1 Bits", difficulty: "easy", priority: "⭐⭐", link: "https://leetcode.com/problems/number-of-1-bits/", description: "Bit Manipulation: XOR tricks, Bit masking, Counting bits", aim: "Master Bit Manipulation pattern." },
+                        { id: 338, name: "Counting Bits", difficulty: "easy", priority: "⭐⭐⭐", link: "https://leetcode.com/problems/counting-bits/", description: "Bit Manipulation: XOR tricks, Bit masking, Counting bits", aim: "Master Bit Manipulation pattern." },
+                        { id: 190, name: "Reverse Bits", difficulty: "easy", priority: "⭐", link: "https://leetcode.com/problems/reverse-bits/", description: "Bit Manipulation: XOR tricks, Bit masking, Counting bits", aim: "Master Bit Manipulation pattern." },
+                        { id: 371, name: "Sum of Two Integers", difficulty: "medium", priority: "⭐⭐⭐", link: "https://leetcode.com/problems/sum-of-two-integers/", description: "Bit Manipulation: XOR tricks, Bit masking, Counting bits", aim: "Master Bit Manipulation pattern." },
+                        { id: 201, name: "Bitwise AND of Numbers Range", difficulty: "medium", priority: "⭐⭐", link: "https://leetcode.com/problems/bitwise-and-of-numbers-range/", description: "Bit Manipulation: XOR tricks, Bit masking, Counting bits", aim: "Master Bit Manipulation pattern." },
+                        { id: 260, name: "Single Number III", difficulty: "medium", priority: "⭐⭐", link: "https://leetcode.com/problems/single-number-iii/", description: "Bit Manipulation: XOR tricks, Bit masking, Counting bits", aim: "Master Bit Manipulation pattern." },
+                        { id: 318, name: "Maximum Product of Word Lengths", difficulty: "medium", priority: "⭐⭐", link: "https://leetcode.com/problems/maximum-product-of-word-lengths/", description: "Bit Manipulation: XOR tricks, Bit masking, Counting bits", aim: "Master Bit Manipulation pattern." },
+                        { id: 137, name: "Single Number II", difficulty: "medium", priority: "⭐⭐", link: "https://leetcode.com/problems/single-number-ii/", description: "Bit Manipulation: XOR tricks, Bit masking, Counting bits", aim: "Master Bit Manipulation pattern." },
+                    ],
+                    day2: [
+                        { id: 303, name: "Range Sum Query - Immutable", difficulty: "easy", priority: "⭐⭐", link: "https://leetcode.com/problems/range-sum-query-immutable/", description: "Prefix Sum: Cumulative sum, Subarray sum tricks, HashMap + prefix", aim: "Master Prefix Sum pattern." },
+                        { id: 238, name: "Product of Array Except Self", difficulty: "medium", priority: "⭐⭐⭐", link: "https://leetcode.com/problems/product-of-array-except-self/", description: "Prefix Sum: Cumulative sum, Subarray sum tricks, HashMap + prefix", aim: "Master Prefix Sum pattern." },
+                        { id: 560, name: "Subarray Sum Equals K", difficulty: "medium", priority: "⭐⭐⭐", link: "https://leetcode.com/problems/subarray-sum-equals-k/", description: "Prefix Sum: Cumulative sum, Subarray sum tricks, HashMap + prefix", aim: "Master Prefix Sum pattern." },
+                        { id: 974, name: "Subarray Sums Divisible by K", difficulty: "medium", priority: "⭐⭐", link: "https://leetcode.com/problems/subarray-sums-divisible-by-k/", description: "Prefix Sum: Cumulative sum, Subarray sum tricks, HashMap + prefix", aim: "Master Prefix Sum pattern." },
+                        { id: 523, name: "Continuous Subarray Sum", difficulty: "medium", priority: "⭐⭐", link: "https://leetcode.com/problems/continuous-subarray-sum/", description: "Prefix Sum: Cumulative sum, Subarray sum tricks, HashMap + prefix", aim: "Master Prefix Sum pattern." },
+                        { id: 304, name: "Range Sum Query 2D - Immutable", difficulty: "medium", priority: "⭐", link: "https://leetcode.com/problems/range-sum-query-2d-immutable/", description: "Prefix Sum: Cumulative sum, Subarray sum tricks, HashMap + prefix", aim: "Master Prefix Sum pattern." },
+                    ],
+                    day3: [
+                        { id: 547, name: "Number of Provinces", difficulty: "medium", priority: "⭐⭐⭐", link: "https://leetcode.com/problems/number-of-provinces/", description: "Union Find / DSU: Disjoint Set Union, Connected components, Cycle detection", aim: "Master Union Find / DSU pattern." },
+                        { id: 684, name: "Redundant Connection", difficulty: "medium", priority: "⭐⭐⭐", link: "https://leetcode.com/problems/redundant-connection/", description: "Union Find / DSU: Disjoint Set Union, Connected components, Cycle detection", aim: "Master Union Find / DSU pattern." },
+                        { id: 685, name: "Redundant Connection II", difficulty: "hard", priority: "⭐⭐", link: "https://leetcode.com/problems/redundant-connection-ii/", description: "Union Find / DSU: Disjoint Set Union, Connected components, Cycle detection", aim: "Master Union Find / DSU pattern." },
+                        { id: 130, name: "Surrounded Regions", difficulty: "medium", priority: "⭐⭐", link: "https://leetcode.com/problems/surrounded-regions/", description: "Union Find / DSU: Disjoint Set Union, Connected components, Cycle detection", aim: "Master Union Find / DSU pattern." },
+                        { id: 721, name: "Accounts Merge", difficulty: "medium", priority: "⭐⭐⭐", link: "https://leetcode.com/problems/accounts-merge/", description: "Union Find / DSU: Disjoint Set Union, Connected components, Cycle detection", aim: "Master Union Find / DSU pattern." },
+                        { id: 1319, name: "Number of Operations to Make Network Connected", difficulty: "medium", priority: "⭐⭐", link: "https://leetcode.com/problems/number-of-operations-to-make-network-connected/", description: "Union Find / DSU: Disjoint Set Union, Connected components, Cycle detection", aim: "Master Union Find / DSU pattern." },
+                        { id: 1061, name: "Lexicographically Smallest Equivalent String", difficulty: "medium", priority: "⭐", link: "https://leetcode.com/problems/lexicographically-smallest-equivalent-string/", description: "Union Find / DSU: Disjoint Set Union, Connected components, Cycle detection", aim: "Master Union Find / DSU pattern." },
+                    ],
+                    day4: [
+                        { id: 204, name: "Count Primes", difficulty: "medium", priority: "⭐⭐⭐", link: "https://leetcode.com/problems/count-primes/", description: "Math & Number Theory: GCD, Primes, Modular arithmetic, Simulation", aim: "Master Math & Number Theory pattern." },
+                        { id: 50, name: "Pow(x, n)", difficulty: "medium", priority: "⭐⭐⭐", link: "https://leetcode.com/problems/powx-n/", description: "Math & Number Theory: GCD, Primes, Modular arithmetic, Simulation", aim: "Master Math & Number Theory pattern." },
+                        { id: 43, name: "Multiply Strings", difficulty: "medium", priority: "⭐⭐", link: "https://leetcode.com/problems/multiply-strings/", description: "Math & Number Theory: GCD, Primes, Modular arithmetic, Simulation", aim: "Master Math & Number Theory pattern." },
+                        { id: 168, name: "Excel Sheet Column Title", difficulty: "easy", priority: "⭐", link: "https://leetcode.com/problems/excel-sheet-column-title/", description: "Math & Number Theory: GCD, Primes, Modular arithmetic, Simulation", aim: "Master Math & Number Theory pattern." },
+                        { id: 1492, name: "The kth Factor of n", difficulty: "medium", priority: "⭐", link: "https://leetcode.com/problems/the-kth-factor-of-n/", description: "Math & Number Theory: GCD, Primes, Modular arithmetic, Simulation", aim: "Master Math & Number Theory pattern." },
+                    ]
+                }
+            }
+        };
+
+        // ============================================
+        // STATE MANAGEMENT - Stores current position and progress
+        // ============================================
+
+        // Load saved position from browser storage (or default to Week 1, Day 1)
+        let currentWeek = parseInt(localStorage.getItem('currentWeek')) || 1;
+        let currentDay = parseInt(localStorage.getItem('currentDay')) || 1;
+
+        // Load completed problems from browser storage (persists across sessions)
+        let completedProblems = JSON.parse(localStorage.getItem('faangProgress') || '{}');
+
+        // Load revision-needed problems from browser storage
+        let revisionProblems = JSON.parse(localStorage.getItem('faangRevision') || '{}');
+
+        // Load problem notes from browser storage
+        let problemNotes = JSON.parse(localStorage.getItem('faangNotes') || '{}');
+
+        // ============================================
+        // INITIALIZATION - Runs when page loads
+        // ============================================
+        function init() {
+            renderSidebar();  // Build the week list in sidebar
+            loadDay(currentWeek, currentDay);  // Load the current day's problems
+            updateRevisionCounter();  // Initialize revision counter
+        }
+
+        // ============================================
+        // SAVE POSITION - Remembers where you left off
+        // ============================================
+        function savePosition() {
+            localStorage.setItem('currentWeek', currentWeek);
+            localStorage.setItem('currentDay', currentDay);
+        }
+
+        // ============================================
+        // RENDER SIDEBAR - Builds the week list with progress
+        // ============================================
+        function renderSidebar() {
+            let html = '';
+            let totalProblems = 0;
+            let totalCompleted = 0;
+
+            // Loop through each week in the database
+            Object.keys(problemsDatabase).forEach((weekKey, index) => {
+                const weekNum = index + 1;
+                const week = problemsDatabase[weekKey];
+                let weekTotal = 0;
+                let weekCompleted = 0;
+
+                // Calculate statistics for this week
+                Object.values(week.days).forEach(dayProblems => {
+                    weekTotal += dayProblems.length;
+                    totalProblems += dayProblems.length;
+                    dayProblems.forEach(p => {
+                        if (completedProblems[p.id]) {
+                            weekCompleted++;
+                            totalCompleted++;
+                        }
+                    });
+                });
+
+                // Calculate completion percentage
+                const weekPercentage = weekTotal > 0 ? (weekCompleted / weekTotal) * 100 : 0;
+                const isActive = weekNum === currentWeek;
+
+                // Build day indicator dots (shows progress for each day)
+                let dayDots = '';
+                Object.keys(week.days).forEach((dayKey, dayIndex) => {
+                    const dayNum = dayIndex + 1;
+                    const dayProblems = week.days[dayKey];
+                    const dayCompleted = dayProblems.filter(p => completedProblems[p.id]).length;
+                    const dayTotal = dayProblems.length;
+
+                    // Determine dot color: completed (green), partial (yellow), or empty (gray)
+                    let dotClass = 'day-dot';
+                    if (dayCompleted === dayTotal) dotClass += ' completed';
+                    else if (dayCompleted > 0) dotClass += ' partial';
+                    if (weekNum === currentWeek && dayNum === currentDay) dotClass += ' active';
+
+                    dayDots += `<div class="${dotClass}"></div>`;
+                });
+
+                // Build HTML for this week item
+                html += `
+                    <div class="week-item ${isActive ? 'active' : ''}" onclick="selectWeek(${weekNum})">
+                        <div class="week-number">Week ${weekNum}</div>
+                        <div class="week-title">${week.title}</div>
+                        <div class="week-progress">
+                            <span>${weekCompleted}/${weekTotal}</span>
+                            <span>${Math.round(weekPercentage)}%</span>
+                        </div>
+                        <div class="week-bar">
+                            <div class="week-bar-fill" style="width: ${weekPercentage}%"></div>
+                        </div>
+                        <div class="days-grid">${dayDots}</div>
+                    </div>
+                `;
+            });
+
+            // Update the sidebar with all weeks
+            document.getElementById('weeksList').innerHTML = html;
+
+            // Update overall progress counter (e.g., "45/376")
+            document.getElementById('overallProgress').textContent = `${totalCompleted}/${totalProblems}`;
+
+            // Update the top progress bar
+            const overallPercentage = totalProblems > 0 ? (totalCompleted / totalProblems) * 100 : 0;
+            document.getElementById('progressFill').style.width = overallPercentage + '%';
+
+            updateRevisionCounter();  // Keep revision counter in sync
+        }
+
+        // ============================================
+        // SELECT WEEK - When user clicks a week in sidebar
+        // ============================================
+        function selectWeek(weekNum) {
+            currentWeek = weekNum;
+            currentDay = 1;  // Always start at day 1 of the selected week
+            savePosition();
+            renderSidebar();  // Update sidebar to show new active week
+            loadDay(currentWeek, currentDay);  // Load the first day of this week
+        }
+
+        // ============================================
+        // LOAD DAY - Displays problems for a specific day
+        // ============================================
+        function loadDay(week, day) {
+            currentWeek = week;
+            currentDay = day;
+            savePosition();
+
+            const weekKey = `week${week}`;
+            const dayKey = `day${day}`;
+            const weekData = problemsDatabase[weekKey];
+
+            // If week or day doesn't exist, show empty state
+            if (!weekData || !weekData.days[dayKey]) {
+                showEmptyState();
+                updateNavigationButtons();
+                return;
+            }
+
+            const problems = weekData.days[dayKey];
+
+            // Build the week info tag at the top
+            let html = `<div class="week-tag">Week ${week} · ${weekData.title} · ${weekData.pattern}</div>`;
+
+            // Build each problem card
+            problems.forEach(problem => {
+                const isCompleted = completedProblems[problem.id] || false;
+                const needsRevision = revisionProblems[problem.id] || false;
+                const problemClasses = ['problem'];
+                if (isCompleted) problemClasses.push('completed');
+                if (needsRevision) problemClasses.push('needs-revision');
+
+                html += `
+                    <div class="${problemClasses.join(' ')}" onclick="toggleFromCard(event, ${problem.id})">
+                        <div class="problem-top">
+                            <input type="checkbox" 
+                                   class="checkbox" 
+                                   ${isCompleted ? 'checked' : ''}
+                                   onclick="event.stopPropagation(); toggleProblem(${problem.id})">
+                            <div class="problem-header">
+                                <div class="problem-title">
+                                    <span class="problem-id">LC ${problem.id}</span>
+                                    <span class="problem-name">${problem.name}</span>
+                                    ${problem.priority ? `<span class="priority">${problem.priority}</span>` : ''}
+                                    <span class="difficulty ${problem.difficulty}">${problem.difficulty}</span>
+                                    ${needsRevision ? '<span class="revision-badge">⚠ NEEDS REVISION</span>' : ''}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="problem-desc">${problem.description}</div>
+                        
+                        <div class="problem-aim">
+                            <div class="aim-label">Learning Goal</div>
+                            <div class="aim-text">${problem.aim}</div>
+                        </div>
+                        
+                        <a href="${problem.link}" target="_blank" class="problem-link" onclick="event.stopPropagation()">
+                            Open LeetCode →
+                        </a>
+                        
+                        <div class="revision-container" onclick="event.stopPropagation()">
+                            <input type="checkbox" 
+                                   class="revision-checkbox" 
+                                   id="revision-${problem.id}"
+                                   ${needsRevision ? 'checked' : ''}
+                                   onclick="toggleRevision(${problem.id})">
+                            <label for="revision-${problem.id}" class="revision-label">Need to Revision</label>
+                        </div>
+                        
+                        <div class="notes-container" onclick="event.stopPropagation()">
+                            <div class="notes-label">📝 My Notes</div>
+                            <textarea 
+                                class="notes-textarea" 
+                                placeholder="Write your important points, patterns, or tips here..."
+                                oninput="saveNote(${problem.id}, this.value)"
+                            >${problemNotes[problem.id] || ''}</textarea>
+                        </div>
+                        
+                        ${problem.solution ? `
+                            <button class="solution-button" id="solution-btn-${problem.id}" onclick="event.stopPropagation(); toggleSolution(${problem.id})">
+                                ▶ See Solution
+                            </button>
+                        ` : ''}
+                    </div>
+                `;
+            });
+
+            // Add solution modals after all problem cards
+            problems.forEach(problem => {
+                if (problem.solution) {
+                    html += `
+                        <div class="solution-panel" id="solution-${problem.id}" style="display: none;" onclick="closeSolutionModal(event, ${problem.id})">
+                            <div class="solution-modal">
+                                <div class="solution-modal-header">
+                                    <div class="solution-modal-title">LC ${problem.id}: ${problem.name}</div>
+                                    <button class="solution-close-btn" onclick="toggleSolution(${problem.id})">×</button>
+                                </div>
+                                <div class="solution-modal-content">
+                                    <div class="solution-section">
+                                        <div class="solution-header">📋 Question</div>
+                                        <div class="solution-explanation">${problem.solution.question}</div>
+                                    </div>
+                                    
+                                    <div class="solution-section">
+                                        <div class="solution-header">💡 Approach</div>
+                                        <div class="solution-explanation">${problem.solution.approach}</div>
+                                    </div>
+                                    
+                                    <div class="solution-section">
+                                        <div class="solution-header">💻 Solution Code (Java)</div>
+                                        <pre class="solution-code">${problem.solution.code}</pre>
+                                    </div>
+                                    
+                                    <div class="solution-section">
+                                        <div class="solution-header">📖 Code Explanation</div>
+                                        <div class="solution-explanation">${problem.solution.explanation}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }
+            });
+
+            // Update the main content area
+            document.getElementById('content').innerHTML = html;
+            document.getElementById('dayLabel').textContent = `Week ${week} · Day ${day}`;
+
+            updateNavigationButtons();  // Enable/disable prev/next buttons
+            renderSidebar();  // Update sidebar to reflect any changes
+        }
+
+        // ============================================
+        // TOGGLE FROM CARD - When user clicks anywhere on problem card
+        // ============================================
+        function toggleFromCard(event, problemId) {
+            // Only toggle if user didn't click on a link or checkbox
+            if (event.target.tagName !== 'A' && event.target.tagName !== 'INPUT') {
+                toggleProblem(problemId);
+            }
+        }
+
+        // ============================================
+        // TOGGLE PROBLEM - Mark problem as complete/incomplete
+        // ============================================
+        function toggleProblem(problemId) {
+            completedProblems[problemId] = !completedProblems[problemId];
+            localStorage.setItem('faangProgress', JSON.stringify(completedProblems));
+            loadDay(currentWeek, currentDay);  // Reload to show updated state
+        }
+
+        // ============================================
+        // TOGGLE REVISION - Mark problem as needing revision
+        // ============================================
+        function toggleRevision(problemId) {
+            revisionProblems[problemId] = !revisionProblems[problemId];
+            localStorage.setItem('faangRevision', JSON.stringify(revisionProblems));
+            updateRevisionCounter();  // Update the revision counter badge
+            loadDay(currentWeek, currentDay);  // Reload to show updated state
+        }
+
+        // ============================================
+        // SAVE NOTE - Save note for a problem (with debouncing)
+        // ============================================
+        let saveNoteTimeout = null;
+        function saveNote(problemId, noteText) {
+            // Clear previous timeout to debounce rapid typing
+            if (saveNoteTimeout) clearTimeout(saveNoteTimeout);
+
+            // Save after 500ms of no typing
+            saveNoteTimeout = setTimeout(() => {
+                if (noteText.trim()) {
+                    problemNotes[problemId] = noteText;
+                } else {
+                    delete problemNotes[problemId];  // Remove empty notes
+                }
+                localStorage.setItem('faangNotes', JSON.stringify(problemNotes));
+            }, 500);
+        }
+
+        // ============================================
+        // TOGGLE SOLUTION - Show/hide solution modal popup
+        // ============================================
+        function toggleSolution(problemId) {
+            const modal = document.getElementById(`solution-${problemId}`);
+
+            if (modal.style.display === 'none' || !modal.style.display) {
+                modal.style.display = 'block';
+            } else {
+                modal.style.display = 'none';
+            }
+        }
+
+        // Close modal when clicking outside of it
+        function closeSolutionModal(event, problemId) {
+            if (event.target.id === `solution-${problemId}`) {
+                toggleSolution(problemId);
+            }
+        }
+
+
+        // ============================================
+        // UPDATE NAVIGATION BUTTONS - Enable/disable prev/next buttons
+        // ============================================
+        function updateNavigationButtons() {
+            const weekKey = `week${currentWeek}`;
+            const weekData = problemsDatabase[weekKey];
+
+            // Disable "Previous" button if at Week 1, Day 1
+            document.getElementById('prevBtn').disabled = (currentWeek === 1 && currentDay === 1);
+
+            // Disable "Next" button if at last week, last day
+            const totalWeeks = Object.keys(problemsDatabase).length;
+            const isLastWeek = currentWeek === totalWeeks;
+            const isLastDay = weekData && currentDay === Object.keys(weekData.days).length;
+            document.getElementById('nextBtn').disabled = (isLastWeek && isLastDay);
+        }
+
+        // ============================================
+        // PREVIOUS DAY - Navigate to previous day
+        // ============================================
+        function previousDay() {
+            if (currentDay > 1) {
+                // Go to previous day in same week
+                currentDay--;
+            } else if (currentWeek > 1) {
+                // Go to last day of previous week
+                currentWeek--;
+                const weekKey = `week${currentWeek}`;
+                const weekData = problemsDatabase[weekKey];
+                if (weekData) {
+                    currentDay = Object.keys(weekData.days).length;
+                }
+            }
+            loadDay(currentWeek, currentDay);
+        }
+
+        // ============================================
+        // NEXT DAY - Navigate to next day
+        // ============================================
+        function nextDay() {
+            const weekKey = `week${currentWeek}`;
+            const weekData = problemsDatabase[weekKey];
+
+            if (weekData && currentDay < Object.keys(weekData.days).length) {
+                // Go to next day in same week
+                currentDay++;
+            } else {
+                // Go to first day of next week
+                currentWeek++;
+                currentDay = 1;
+            }
+
+            loadDay(currentWeek, currentDay);
+        }
+
+        // ============================================
+        // SHOW EMPTY STATE - Display when no problems available
+        // ============================================
+        function showEmptyState() {
+            document.getElementById('content').innerHTML = `
+                <div class="empty-state">
+                    <div class="empty-icon">·</div>
+                    <div class="empty-text">No problems available for this day.<br>All 26 weeks are now loaded!</div>
+                </div>
+            `;
+        }
+
+        // ============================================
+        // DASHBOARD FUNCTIONS
+        // ============================================
+
+        // Global variables to store chart instances
+        let progressPieChartInstance = null;
+        let difficultyBarChartInstance = null;
+
+        // ============================================
+        // OPEN DASHBOARD - Opens dashboard modal and renders charts
+        // ============================================
+        function openDashboard() {
+            document.getElementById('dashboardOverlay').classList.add('active');
+            updateDashboardData();
+        }
+
+        // ============================================
+        // CLOSE DASHBOARD - Closes dashboard modal
+        // ============================================
+        function closeDashboard() {
+            document.getElementById('dashboardOverlay').classList.remove('active');
+        }
+
+        // ============================================
+        // UPDATE DASHBOARD DATA - Calculates and updates all dashboard statistics
+        // ============================================
+        function updateDashboardData() {
+            const data = calculateDashboardData();
+
+            // Update stats cards
+            document.getElementById('dash-total-progress').textContent =
+                `${data.totalCompleted}/${data.totalProblems}`;
+            document.getElementById('dash-total-percent').textContent =
+                `${Math.round(data.totalPercentage)}% complete`;
+
+            document.getElementById('dash-easy-progress').textContent =
+                `${data.easyCompleted}/${data.easyTotal}`;
+            document.getElementById('dash-easy-percent').textContent =
+                `${Math.round(data.easyPercentage)}% complete`;
+
+            document.getElementById('dash-medium-progress').textContent =
+                `${data.mediumCompleted}/${data.mediumTotal}`;
+            document.getElementById('dash-medium-percent').textContent =
+                `${Math.round(data.mediumPercentage)}% complete`;
+
+            document.getElementById('dash-hard-progress').textContent =
+                `${data.hardCompleted}/${data.hardTotal}`;
+            document.getElementById('dash-hard-percent').textContent =
+                `${Math.round(data.hardPercentage)}% complete`;
+
+            // Render all charts and lists
+            renderProgressPieChart();
+            renderDifficultyBarChart();
+            renderWeakAreas();
+        }
+
+        // ============================================
+        // CALCULATE DASHBOARD DATA - Aggregates all progress data
+        // ============================================
+        function calculateDashboardData() {
+            let totalProblems = 0, totalCompleted = 0;
+            let easyTotal = 0, easyCompleted = 0;
+            let mediumTotal = 0, mediumCompleted = 0;
+            let hardTotal = 0, hardCompleted = 0;
+
+            Object.keys(problemsDatabase).forEach((weekKey, index) => {
+                const week = problemsDatabase[weekKey];
+
+                Object.values(week.days).forEach(dayProblems => {
+                    dayProblems.forEach(problem => {
+                        totalProblems++;
+
+                        // Count by difficulty
+                        if (problem.difficulty === 'easy') easyTotal++;
+                        else if (problem.difficulty === 'medium') mediumTotal++;
+                        else if (problem.difficulty === 'hard') hardTotal++;
+
+                        // Check if completed
+                        if (completedProblems[problem.id]) {
+                            totalCompleted++;
+                            if (problem.difficulty === 'easy') easyCompleted++;
+                            else if (problem.difficulty === 'medium') mediumCompleted++;
+                            else if (problem.difficulty === 'hard') hardCompleted++;
+                        }
+                    });
+                });
+            });
+
+            return {
+                totalProblems,
+                totalCompleted,
+                totalPercentage: totalProblems > 0 ? (totalCompleted / totalProblems) * 100 : 0,
+                easyTotal,
+                easyCompleted,
+                easyPercentage: easyTotal > 0 ? (easyCompleted / easyTotal) * 100 : 0,
+                mediumTotal,
+                mediumCompleted,
+                mediumPercentage: mediumTotal > 0 ? (mediumCompleted / mediumTotal) * 100 : 0,
+                hardTotal,
+                hardCompleted,
+                hardPercentage: hardTotal > 0 ? (hardCompleted / hardTotal) * 100 : 0
+            };
+        }
+
+        // ============================================
+        // RENDER PROGRESS PIE CHART - Overall completion pie chart
+        // ============================================
+        function renderProgressPieChart() {
+            const data = calculateDashboardData();
+            const ctx = document.getElementById('progressPieChart');
+
+            if (progressPieChartInstance) {
+                progressPieChartInstance.destroy();
+            }
+
+            progressPieChartInstance = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Completed', 'Remaining'],
+                    datasets: [{
+                        data: [data.totalCompleted, data.totalProblems - data.totalCompleted],
+                        backgroundColor: ['#4a7c59', '#1a1a1a'],
+                        borderColor: ['#5a8c69', '#2a2a2a'],
+                        borderWidth: 2,
+                        hoverOffset: 15
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '70%',
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                color: '#888888',
+                                font: { size: 12 },
+                                padding: 20,
+                                usePointStyle: true
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // ============================================
+        // RENDER DIFFICULTY BAR CHART - Difficulty breakdown
+        // ============================================
+        function renderDifficultyBarChart() {
+            const data = calculateDashboardData();
+            const ctx = document.getElementById('difficultyBarChart');
+
+            if (difficultyBarChartInstance) {
+                difficultyBarChartInstance.destroy();
+            }
+
+            difficultyBarChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: [
+                        `Easy (${data.easyCompleted}/${data.easyTotal})`,
+                        `Medium (${data.mediumCompleted}/${data.mediumTotal})`,
+                        `Hard (${data.hardCompleted}/${data.hardTotal})`
+                    ],
+                    datasets: [
+                        {
+                            label: 'Completed',
+                            data: [data.easyCompleted, data.mediumCompleted, data.hardCompleted],
+                            backgroundColor: '#4a7c59',
+                            borderRadius: 4
+                        },
+                        {
+                            label: 'Remaining',
+                            data: [
+                                data.easyTotal - data.easyCompleted,
+                                data.mediumTotal - data.mediumCompleted,
+                                data.hardTotal - data.hardCompleted
+                            ],
+                            backgroundColor: '#1a1a1a',
+                            borderRadius: 4
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            stacked: true,
+                            grid: { display: false },
+                            ticks: { color: '#888888', font: { size: 11 } }
+                        },
+                        y: {
+                            stacked: true,
+                            grid: { color: '#1a1a1a' },
+                            ticks: { color: '#666666', font: { size: 11 } }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                color: '#888888',
+                                font: { size: 12 },
+                                usePointStyle: true,
+                                padding: 20
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // ============================================
+        // CALCULATE WEAK AREAS - Identifies topics with most revision problems
+        // ============================================
+        function calculateWeakAreas() {
+            const weakAreas = [];
+
+            Object.keys(problemsDatabase).forEach((weekKey, index) => {
+                const week = problemsDatabase[weekKey];
+                let revisionCount = 0;
+                let totalProblems = 0;
+
+                Object.values(week.days).forEach(dayProblems => {
+                    dayProblems.forEach(problem => {
+                        totalProblems++;
+                        if (revisionProblems[problem.id]) {
+                            revisionCount++;
+                        }
+                    });
+                });
+
+                if (revisionCount > 0) {
+                    weakAreas.push({
+                        week: index + 1,
+                        title: week.title,
+                        revisionCount: revisionCount,
+                        totalProblems: totalProblems,
+                        percentage: (revisionCount / totalProblems) * 100
+                    });
+                }
+            });
+
+            // Sort by revision count desc and take top 5
+            return weakAreas.sort((a, b) => b.revisionCount - a.revisionCount).slice(0, 5);
+        }
+
+        // ============================================
+        // RENDER WEAK AREAS - Displays ranked weak areas
+        // ============================================
+        function renderWeakAreas() {
+            const weakAreas = calculateWeakAreas();
+            const container = document.getElementById('weakAreasList');
+
+            if (weakAreas.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-weak-areas">
+                        <div class="empty-weak-areas-icon">🏆</div>
+                        <div class="empty-weak-areas-title">No Weak Areas Detected</div>
+                        <div class="empty-weak-areas-text">
+                            Excellent work! You don't have any problems marked for revision.<br>
+                            Mark problems you find difficult to track them here.
+                        </div>
+                    </div>
+                `;
+                return;
+            }
+
+            let html = '';
+            weakAreas.forEach((area, index) => {
+                html += `
+                    <div class="weak-area-item">
+                        <div class="weak-area-rank">${index + 1}</div>
+                        <div class="weak-area-info">
+                            <div class="weak-area-topic">${area.title}</div>
+                            <div class="weak-area-week">Week ${area.week} Topic</div>
+                        </div>
+                        <div class="weak-area-stats">
+                            <div class="weak-area-stat">
+                                <span class="weak-area-stat-label">Revision Count</span>
+                                <span class="weak-area-stat-value">${area.revisionCount} / ${area.totalProblems}</span>
+                            </div>
+                            <div class="weak-area-stat">
+                                <span class="weak-area-stat-label">Ratio</span>
+                                <span class="weak-area-stat-value">${Math.round(area.percentage)}%</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            container.innerHTML = html;
+        }
+
+        // ============================================
+        // UPDATE REVISION COUNTER - Updates revision counter in top bar
+        // ============================================
+        function updateRevisionCounter() {
+            const revisionCount = Object.keys(revisionProblems).filter(id => revisionProblems[id]).length;
+            document.getElementById('revisionCounter').textContent = revisionCount;
+        }
+
+        // ============================================
+        // START THE APP - Initialize when page loads
+        // ============================================
+        init();
+    </script>
+</body>
+
+</html>
