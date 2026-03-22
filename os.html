@@ -2715,6 +2715,31 @@
         <div class="dash-title" style="margin-bottom:14px">Day-by-Day Status</div>
         <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:8px" id="dayGrid"></div>
       </div>
+
+      <!-- Mock Test Performance in Analytics -->
+      <div style="background:var(--s1);border:1px solid var(--border);border-radius:var(--r);padding:20px;margin-top:20px">
+        <div class="dash-title" style="margin-bottom:4px">📝 Mock Test Performance</div>
+        <p style="color:var(--text3);font-size:0.8rem;margin-bottom:16px">Score breakdown across 5 placement mock tests</p>
+        <div class="mt-analytics" style="margin-bottom:0;padding:0;border:none;background:none">
+          <div class="mt-stats-grid">
+            <div class="mt-stat-card">
+              <span class="mt-stat-val" id="mt-stat-avg2">0%</span>
+              <span class="mt-stat-lbl">Avg Score</span>
+            </div>
+            <div class="mt-stat-card">
+              <span class="mt-stat-val" id="mt-stat-total2">0</span>
+              <span class="mt-stat-lbl">Total Correct</span>
+            </div>
+            <div class="mt-stat-card full">
+              <span class="mt-stat-val" id="mt-stat-count2">0 / 5</span>
+              <span class="mt-stat-lbl">Tests Completed</span>
+            </div>
+          </div>
+          <div class="mt-chart-wrapper">
+            <canvas id="mtChart2"></canvas>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -3504,6 +3529,7 @@
       btn.classList.add('active');
       document.getElementById('int-panel-' + tab).classList.add('active');
       if (tab === 'liners' && !document.getElementById('interview-content').innerHTML) { renderInterview(); }
+      if (tab === 'mocktest') { setTimeout(renderMockAnalytics, 50); }
     }
 
     function openMockTest(id) {
@@ -3667,6 +3693,7 @@
     }
 
     let mtChartInstance = null;
+    let mtChartInstance2 = null;
     function renderMockAnalytics() {
       const ids = ['mt1', 'mt2', 'mt3', 'mt4', 'mt5'];
       let totalPct = 0;
@@ -3694,15 +3721,18 @@
       });
 
       const avg = count > 0 ? Math.round(totalPct / count) : 0;
-      document.getElementById('mt-stat-avg').textContent = avg + '%';
-      document.getElementById('mt-stat-count').textContent = count + ' / 5';
-      document.getElementById('mt-stat-total').textContent = correct;
 
-      const ctx = document.getElementById('mtChart');
-      if (!ctx) return;
+      // Update both sets of stat elements
+      ['', '2'].forEach(suffix => {
+        const avgEl = document.getElementById('mt-stat-avg' + suffix);
+        const countEl = document.getElementById('mt-stat-count' + suffix);
+        const totalEl = document.getElementById('mt-stat-total' + suffix);
+        if (avgEl) avgEl.textContent = avg + '%';
+        if (countEl) countEl.textContent = count + ' / 5';
+        if (totalEl) totalEl.textContent = correct;
+      });
 
-      if (mtChartInstance) mtChartInstance.destroy();
-      mtChartInstance = new Chart(ctx, {
+      const chartOpts = {
         type: 'bar',
         data: {
           labels: ['Test 1', 'Test 2', 'Test 3', 'Test 4', 'Test 5'],
@@ -3724,12 +3754,24 @@
           },
           plugins: {
             legend: { display: false },
-            tooltip: {
-              callbacks: { label: ctx => ctx.parsed.y + '%' }
-            }
+            tooltip: { callbacks: { label: c => c.parsed.y + '%' } }
           }
         }
-      });
+      };
+
+      // Render chart in Interview → Mock Test tab
+      const ctx1 = document.getElementById('mtChart');
+      if (ctx1 && ctx1.offsetParent !== null) {
+        if (mtChartInstance) mtChartInstance.destroy();
+        mtChartInstance = new Chart(ctx1, JSON.parse(JSON.stringify(chartOpts)));
+      }
+
+      // Render chart in Analytics view
+      const ctx2 = document.getElementById('mtChart2');
+      if (ctx2 && ctx2.offsetParent !== null) {
+        if (mtChartInstance2) mtChartInstance2.destroy();
+        mtChartInstance2 = new Chart(ctx2, JSON.parse(JSON.stringify(chartOpts)));
+      }
     }
 
     // Render analytics on page load
@@ -4429,7 +4471,7 @@
       document.getElementById('view-' + v).classList.add('active');
       document.querySelectorAll('.hdr-btn').forEach(b => b.classList.remove('active'));
       event.target.classList.add('active');
-      if (v === 'analytics') { updateDash(); renderPieCharts(); }
+      if (v === 'analytics') { updateDash(); renderPieCharts(); setTimeout(renderMockAnalytics, 50); }
       if (v === 'interview') {
         if (!document.getElementById('interview-content').innerHTML) { renderInterview(); }
       }
