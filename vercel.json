@@ -5,7 +5,7 @@
   "rewrites": [
     {
       "source": "/(.*)",
-      "destination": "/lc8w.html"
+      "destination": "/index.html"
     }
   ]
 }
