@@ -803,16 +803,25 @@
     /* ASCII Diagram */
     .asc {
       font-family: 'IBM Plex Mono', monospace;
-      font-size: 0.78rem;
-      background: var(--s1);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 14px;
-      color: var(--teal-l);
+      font-size: 0.82rem;
+      background: #0d131f;
+      border: 1px solid rgba(0, 229, 255, 0.2);
+      border-radius: 10px;
+      padding: 16px;
+      color: #00e5ff;
       white-space: pre;
       overflow-x: auto;
-      line-height: 1.5;
-      margin: 10px 0;
+      line-height: 1.6;
+      margin: 14px 0;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.3), inset 0 0 10px rgba(0, 229, 255, 0.05);
+      text-shadow: 0 0 5px rgba(0, 229, 255, 0.3);
+    }
+    .asc::-webkit-scrollbar {
+      height: 6px;
+    }
+    .asc::-webkit-scrollbar-thumb {
+      background: rgba(0, 229, 255, 0.3);
+      border-radius: 3px;
     }
 
     .diag-lbl {
