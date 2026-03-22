@@ -2165,7 +2165,7 @@
         </div>
         <div class="acc-body">
           <div class="meta">
-            <span class="m-pdf">📄 PDF Pages 1–4 · LEC-1 &amp; LEC-2</span>
+            <a class="m-pdf" href="/os.pdf#page=1" target="_blank">📄 PDF Pages 1–4 · LEC-1 &amp; LEC-2</a>
             <a class="m-yt" href="https://www.youtube.com/watch?v=26QPDBe-NB8" target="_blank">▶ Intro to OS — Neso
               Academy</a>
             <a class="m-yt" href="https://www.youtube.com/watch?v=GjNp0bBLjr0" target="_blank">▶ Types of OS — Gate
@@ -2329,7 +2329,7 @@
         </div>
         <div class="acc-body">
           <div class="meta">
-            <span class="m-pdf">📄 PDF Pages 5–8 · LEC-3 &amp; LEC-4</span>
+            <a class="m-pdf" href="/os.pdf#page=5" target="_blank">📄 PDF Pages 5–8 · LEC-3 &amp; LEC-4</a>
             <a class="m-yt" href="https://www.youtube.com/watch?v=26QPDBe-NB8" target="_blank">▶ Process vs Thread —
               Neso Academy</a>
             <a class="m-yt" href="https://www.youtube.com/watch?v=GjNp0bBLjr0" target="_blank">▶ Kernel Types — Gate
@@ -3852,8 +3852,12 @@
         14: `<a class="m-yt" href="https://www.youtube.com/watch?v=26QPDBe-NB8" target="_blank">▶ Full OS Playlist — Neso Academy</a>`
       };
 
+      const pageMatch = PDF_PAGES[n].match(/Page(?:s)? (\d+)/);
+      const pageNum = pageMatch ? pageMatch[1] : 1;
+      const pdfHtml = PDF_PAGES[n] === "Full Review" ? `<span class="m-pdf">📄 ${PDF_PAGES[n]}</span>` : `<a class="m-pdf" href="/os.pdf#page=${pageNum}" target="_blank">📄 PDF ${PDF_PAGES[n]}</a>`;
+
       body.innerHTML = `
-  <div class="meta"><span class="m-pdf">📄 PDF ${PDF_PAGES[n]}</span>${YT[n] || ''}</div>
+  <div class="meta">${pdfHtml}${YT[n] || ''}</div>
   <div id="theory-${n}"></div>
   <details class="day-details mcq-details" id="dd-mcq-${n}">
     <summary class="day-summary mcq-summary">&#9889; Quick MCQ Test &#8212; Day ${n} <span class="mcq-score" id="score-${n}">Score: &#8212;</span></summary>
