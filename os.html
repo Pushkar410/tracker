@@ -2442,19 +2442,19 @@
           </ol>
 
           <div class="sh">Kernel Types</div>
-          <div class="asc"> MONOLITHIC KERNEL MICRO KERNEL HYBRID KERNEL
-            ┌────────────────┐ ┌─────────────┐ ┌──────────────────┐
-            │ User Space │ │ User Space │ │ User Space │
-            │ (Apps, GUI) │ │ File I/O │ │ File Mgmt (out) │
-            ├────────────────┤ ├─────────────┤ ├──────────────────┤
-            │ KERNEL │ │ KERNEL │ │ KERNEL │
-            │ Process Mgmt │ │ Process │ │ Process Mgmt │
-            │ Memory Mgmt │ │ Memory │ │ Memory Mgmt │
-            │ File Mgmt │ └─────────────┘ │ (most things) │
-            │ I/O Mgmt │ Tiny. Reliable. └──────────────────┘
-            └────────────────┘ SLOW (IPC overhead) Best of both worlds
-            FAST. But 1 crash
-            = entire OS down</div>
+          <div class="asc">  MONOLITHIC KERNEL          MICRO KERNEL           HYBRID KERNEL
+  ┌────────────────┐     ┌─────────────┐        ┌──────────────────┐
+  │  User Space    │     │ User Space  │        │  User Space      │
+  │  (Apps, GUI)   │     │ File  I/O   │        │  File Mgmt (out) │
+  ├────────────────┤     ├─────────────┤        ├──────────────────┤
+  │    KERNEL      │     │   KERNEL    │        │  KERNEL          │
+  │  Process Mgmt  │     │  Process    │        │  Process Mgmt    │
+  │  Memory Mgmt   │     │  Memory     │        │  Memory Mgmt     │
+  │  File Mgmt     │     └─────────────┘        │  (most things)   │
+  │  I/O Mgmt      │     Tiny. Reliable.        └──────────────────┘
+  └────────────────┘     SLOW (IPC overhead)    Best of both worlds
+  FAST. But 1 crash
+  = entire OS down</div>
           <table class="tbl">
             <thead>
               <tr>
