@@ -11,6 +11,7 @@
   <link
     href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;700&family=DM+Sans:wght@300;400;500;600;700&display=swap"
     rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
   <style>
     * {
       margin: 0;
@@ -831,6 +832,62 @@
       text-transform: uppercase;
       letter-spacing: 1px;
       margin-bottom: 8px
+    }
+
+    /* Mock Test Analytics */
+    .mt-analytics {
+      display: grid;
+      grid-template-columns: 1fr 2fr;
+      gap: 20px;
+      margin-bottom: 30px;
+      background: rgba(255,255,255,0.02);
+      padding: 20px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+    }
+    .mt-stats-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    .mt-stat-card {
+      background: var(--s2);
+      padding: 15px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+    .mt-stat-card.full {
+      grid-column: span 2;
+    }
+    .mt-stat-val {
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: var(--accent);
+      display: block;
+    }
+    .mt-stat-lbl {
+      font-size: 0.7rem;
+      color: var(--text3);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-top: 4px;
+    }
+    .mt-chart-wrapper {
+      background: var(--s2);
+      padding: 15px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      height: 220px;
+      position: relative;
+    }
+    @media (max-width: 768px) {
+      .mt-analytics {
+        grid-template-columns: 1fr;
+      }
     }
 
     .diag-links {
@@ -2687,6 +2744,27 @@
         <div class="int-sub">5 full mock tests · 50 questions each · 250 unique placement-level MCQs · Instant results
           with explanations</div>
 
+        <!-- MOCK TEST ANALYTICS -->
+        <div class="mt-analytics">
+          <div class="mt-stats-grid">
+            <div class="mt-stat-card">
+              <span class="mt-stat-val" id="mt-stat-avg">0%</span>
+              <span class="mt-stat-lbl">Avg Score</span>
+            </div>
+            <div class="mt-stat-card">
+              <span class="mt-stat-val" id="mt-stat-total">0</span>
+              <span class="mt-stat-lbl">Total Correct</span>
+            </div>
+            <div class="mt-stat-card full">
+              <span class="mt-stat-val" id="mt-stat-count">0 / 5</span>
+              <span class="mt-stat-lbl">Mock Tests Completed</span>
+            </div>
+          </div>
+          <div class="mt-chart-wrapper">
+            <canvas id="mtChart"></canvas>
+          </div>
+        </div>
+
         <!-- MOCK TEST OVERVIEW CARDS -->
         <div class="mt-overview-grid">
           <div class="mt-ov-card" onclick="openMockTest('mt1')">
@@ -2773,8 +2851,13 @@
     const STATE = {
       days: JSON.parse(localStorage.getItem('os_days') || '{}'),
       mcq: JSON.parse(localStorage.getItem('os_mcq') || '{}'),
+      mock: JSON.parse(localStorage.getItem('os_mock') || '{}'),
     };
-    function save() { localStorage.setItem('os_days', JSON.stringify(STATE.days)); localStorage.setItem('os_mcq', JSON.stringify(STATE.mcq)); }
+    function save() { 
+      localStorage.setItem('os_days', JSON.stringify(STATE.days)); 
+      localStorage.setItem('os_mcq', JSON.stringify(STATE.mcq)); 
+      localStorage.setItem('os_mock', JSON.stringify(STATE.mock)); 
+    }
 
     // ══════════════════════════════════════════════════════════
     // MCQ DATA — 5 per day, unique, placement-level
@@ -3413,7 +3496,7 @@
     let mtAnswers = {};
     let mtTimerInterval = null;
     let mtSeconds = 0;
-    let mtScores = {};
+    let mtScores = STATE.mock;
 
     function switchIntTab(tab, btn) {
       document.querySelectorAll('.int-snbtn').forEach(b => b.classList.remove('active'));
@@ -3543,6 +3626,8 @@
       const pct = Math.round(correct / qs.length * 100);
       const ovs = document.getElementById('ovs-' + id);
       if (ovs) { ovs.textContent = correct + '/' + qs.length + ' (' + pct + '%)'; ovs.className = 'mt-ov-status done'; }
+      save();
+      renderMockAnalytics();
       // Show results
       const colors = pct >= 80 ? 'var(--green-l)' : pct >= 60 ? 'var(--yellow-l)' : 'var(--red-l)';
       const grade = pct === 100 ? '🏆 Perfect — Placement Ready!' : pct >= 80 ? '🎯 Excellent — Strong OS fundamentals!' : pct >= 60 ? '📚 Good — Keep revising weak topics.' : '🔄 Needs more revision — revisit the day notes.';
@@ -3570,14 +3655,85 @@
       const id = activeMTId;
       delete mtAnswers[id];
       delete mtScores[id];
+      save();
       mtSeconds = 0;
       document.getElementById('mt-result-panel').style.display = 'none';
       const ovs = document.getElementById('ovs-' + id);
       if (ovs) { ovs.textContent = 'Not Attempted'; ovs.className = 'mt-ov-status'; }
       document.getElementById('mt-progress-bar').style.width = '0%';
       document.getElementById('mt-progress-bar').style.background = '';
+      renderMockAnalytics();
       openMockTest(id);
     }
+
+    let mtChartInstance = null;
+    function renderMockAnalytics() {
+      const ids = ['mt1', 'mt2', 'mt3', 'mt4', 'mt5'];
+      let totalPct = 0;
+      let count = 0;
+      let correct = 0;
+      let data = [];
+
+      ids.forEach(id => {
+        if (mtScores[id] !== undefined) {
+          const score = mtScores[id];
+          const qCount = MOCK_TESTS[id].qs.length;
+          const pct = Math.round(score / qCount * 100);
+          totalPct += pct;
+          count++;
+          correct += score;
+          data.push(pct);
+          const ovs = document.getElementById('ovs-' + id);
+          if (ovs) { 
+            ovs.textContent = score + '/' + qCount + ' (' + pct + '%)'; 
+            ovs.className = 'mt-ov-status done'; 
+          }
+        } else {
+          data.push(0);
+        }
+      });
+
+      const avg = count > 0 ? Math.round(totalPct / count) : 0;
+      document.getElementById('mt-stat-avg').textContent = avg + '%';
+      document.getElementById('mt-stat-count').textContent = count + ' / 5';
+      document.getElementById('mt-stat-total').textContent = correct;
+
+      const ctx = document.getElementById('mtChart');
+      if (!ctx) return;
+
+      if (mtChartInstance) mtChartInstance.destroy();
+      mtChartInstance = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: ['Test 1', 'Test 2', 'Test 3', 'Test 4', 'Test 5'],
+          datasets: [{
+            label: 'Score %',
+            data: data,
+            backgroundColor: data.map(v => v >= 80 ? 'rgba(76,175,80,0.3)' : v >= 60 ? 'rgba(255,193,7,0.3)' : v > 0 ? 'rgba(244,67,54,0.3)' : 'rgba(255,255,255,0.05)'),
+            borderColor: data.map(v => v >= 80 ? '#4caf50' : v >= 60 ? '#ffc107' : v > 0 ? '#f44336' : 'rgba(255,255,255,0.1)'),
+            borderWidth: 2,
+            borderRadius: 6,
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            y: { beginAtZero: true, max: 100, grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#888', callback: v => v + '%' } },
+            x: { grid: { display: false }, ticks: { color: '#888' } }
+          },
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              callbacks: { label: ctx => ctx.parsed.y + '%' }
+            }
+          }
+        }
+      });
+    }
+
+    // Render analytics on page load
+    document.addEventListener('DOMContentLoaded', renderMockAnalytics);
 
     // ══════════════════════════════════════════════════════════
     // RENDER FUNCTIONS
