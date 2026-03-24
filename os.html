@@ -4742,7 +4742,18 @@
                 } else {
                     await createUserWithEmailAndPassword(auth, email, pass);
                 }
-                await syncUserData(auth.currentUser.uid, { displayName: name });
+                const localData = {
+                    displayName: name,
+                    faangProgress: JSON.parse(localStorage.getItem('faangProgress') || '{}'),
+                    faangRevision: JSON.parse(localStorage.getItem('faangRevision') || '{}'),
+                    faangNotes: JSON.parse(localStorage.getItem('faangNotes') || '{}')
+                };
+                try {
+                    const osState = JSON.parse(localStorage.getItem('os_state_v1') || '{}');
+                    localData.os_days = osState.days || {};
+                    localData.os_mock = osState.mock || {};
+                } catch(e) {}
+                await syncUserData(auth.currentUser.uid, localData);
             }
             closeAuthModal();
             alert(authMode === 'login' ? "Logged in successfully!" : "Account created successfully!");
@@ -4815,6 +4826,15 @@
                 </div>`;
             });
             lbContainer.innerHTML = html || '<div style="padding:20px;text-align:center;color:#444">No more users</div>';
+        }, (error) => {
+            console.error("Firebase Error:", error.message);
+            if (error.message.includes("Missing or insufficient permissions")) {
+                lbContainer.innerHTML = '<div style="padding:20px;text-align:center;color:#ff4444;font-weight:bold;">Error: Access Denied.<br><br><span style="font-size:12px;color:#aaa;">You need to update your Firestore Database Security Rules to allow reads and writes. Check the console or ask your assistant how to do this.</span></div>';
+            } else if (error.message.includes("requires an index")) {
+                lbContainer.innerHTML = `<div style="padding:20px;text-align:center;color:#ff4444;font-size:12px;">Data loading failed because an index is required.<br><a href="${error.message.split('here: ')[1]}" target="_blank" style="color:#ff8c00;">Click here to build the index</a></div>`;
+            } else {
+                lbContainer.innerHTML = `<div style="padding:20px;text-align:center;color:#ff4444;font-size:12px;">Error: ${error.message}</div>`;
+            }
         });
     }
 
