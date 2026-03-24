@@ -26,32 +26,33 @@ export {
 };
 
 /**
- * Calculates total points based on user progress.
+ * Calculates separate LeetCode and OS points, plus total.
  */
 export function calculatePoints(data) {
-    let points = 0;
+    let lc_points = 0;
+    let os_points = 0;
     
-    // LeetCode Progress: 10 points per problem
+    // LeetCode Progress: 10 points per problem solved
     if (data.faangProgress) {
-        points += Object.values(data.faangProgress).filter(v => v === true).length * 10;
+        lc_points += Object.values(data.faangProgress).filter(v => v === true).length * 10;
     }
     
-    // OS Progress: 5 pts for 'done', 2 pts for 'rev'
+    // OS Days: 5 pts for 'done', 2 pts for 'rev'
     if (data.os_days) {
         Object.values(data.os_days).forEach(status => {
-            if (status === 'done') points += 5;
-            else if (status === 'rev') points += 2;
+            if (status === 'done') os_points += 5;
+            else if (status === 'rev') os_points += 2;
         });
     }
     
     // OS Mock Test: 1 pt per correct answer
     if (data.os_mock) {
         Object.values(data.os_mock).forEach(score => {
-            points += score;
+            os_points += score;
         });
     }
     
-    return points;
+    return { lc_points, os_points, totalPoints: lc_points + os_points };
 }
 
 /**
@@ -71,8 +72,11 @@ export async function syncUserData(uid, updateData) {
         lastUpdated: serverTimestamp()
     };
     
-    // Recalculate points
-    mergedData.totalPoints = calculatePoints(mergedData);
+    // Recalculate all points
+    const pts = calculatePoints(mergedData);
+    mergedData.lc_points = pts.lc_points;
+    mergedData.os_points = pts.os_points;
+    mergedData.totalPoints = pts.totalPoints;
     
     await setDoc(userRef, mergedData);
 }

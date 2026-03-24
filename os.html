@@ -4805,7 +4805,7 @@
 
     function fetchLeaderboard() {
         const lbContainer = document.getElementById('leaderboardList');
-        const q = query(collection(db, "users"), orderBy("totalPoints", "desc"), limit(100));
+        const q = query(collection(db, "users"), orderBy("os_points", "desc"), limit(100));
         onSnapshot(q, (snapshot) => {
             const allUsers = [];
             snapshot.forEach(doc => allUsers.push({ id: doc.id, ...doc.data() }));
@@ -4822,10 +4822,10 @@
                 html += `<div class="lb-row ${isMe ? 'me' : ''}">
                     <span class="lb-rank">#${rank}</span>
                     <span class="lb-name">${user.displayName || 'Anonymous'} ${isMe ? '(You)' : ''}</span>
-                    <span class="lb-points">${user.totalPoints || 0}</span>
+                    <span class="lb-points">${user.os_points || 0} pts</span>
                 </div>`;
             });
-            lbContainer.innerHTML = html || '<div style="padding:20px;text-align:center;color:#444">No more users</div>';
+            lbContainer.innerHTML = html || '<div style="padding:20px;text-align:center;color:#444">No users yet</div>';
         }, (error) => {
             console.error("Firebase Error:", error.message);
             if (error.message.includes("Missing or insufficient permissions")) {
@@ -4849,6 +4849,14 @@
         if (docSnap.exists()) {
             const userData = docSnap.data();
             document.getElementById('profile-display-name').value = userData.displayName || '';
+            // Always re-sync local progress to catch any updates made while offline
+            const localData = {
+                os_days: STATE.days,
+                os_mock: STATE.mock || {},
+                faangProgress: JSON.parse(localStorage.getItem('faangProgress') || '{}'),
+                faangRevision: JSON.parse(localStorage.getItem('faangRevision') || '{}')
+            };
+            syncUserData(user.uid, localData);
         } else {
             const name = prompt("Welcome! Enter your leaderboard name:");
             if (name) {
