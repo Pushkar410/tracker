@@ -4670,29 +4670,87 @@
       setTimeout(() => renderPieCharts(), 100);
     });
   </script>
-  <div class="auth-overlay" id="auth-modal">
-    <div class="auth-close" onclick="closeAuthModal()">×</div>
-    <div class="auth-card">
-      <div class="auth-title" id="auth-title">Profile</div>
-      <div class="auth-sub" id="auth-sub">Set your global leaderboard name</div>
-      <div id="auth-profile-section" style="margin-bottom: 20px;">
-          <input type="text" id="auth-display-name" class="auth-input" placeholder="Enter username">
-          <button class="auth-btn" style="width: 100%; margin-top: 10px;" onclick="updateUsername()">Save Username</button>
-      </div>
+    <div class="auth-overlay" id="auth-modal">
+        <div class="auth-close" onclick="closeAuthModal()">×</div>
+        
+        <!-- Login/Signup Card -->
+        <div class="auth-card" id="auth-login-card">
+            <div class="auth-title" id="auth-title">Login</div>
+            <div class="auth-sub" id="auth-sub">Access your tracker account</div>
+            <input type="text" id="auth-display-name" class="auth-input" placeholder="Leaderboard Name" style="display: none;">
+            <input type="email" id="auth-email" class="auth-input" placeholder="Email Address">
+            <input type="password" id="auth-password" class="auth-input" placeholder="Password">
+            <button class="auth-btn" style="width: 100%; margin-top: 10px;" onclick="handleAuth()" id="auth-action-btn">Login</button>
+            <div class="auth-link" id="auth-toggle" onclick="toggleAuthMode()">No account? Create one</div>
+        </div>
+
+        <!-- Profile Edit Card -->
+        <div class="auth-card" id="auth-profile-card" style="display: none;">
+            <div class="auth-title">Profile</div>
+            <div class="auth-sub">Set your global leaderboard name</div>
+            <div style="margin-bottom: 20px;">
+                <input type="text" id="profile-display-name" class="auth-input" placeholder="Enter username">
+                <button class="auth-btn" style="width: 100%; margin-top: 10px;" onclick="updateUsername()">Save Username</button>
+            </div>
+        </div>
     </div>
-  </div>
 
   <script type="module">
-    import { db, auth, onAuthStateChanged, signInAnonymously, doc, getDoc, onSnapshot, collection, query, orderBy, limit, syncUserData, startAfter } from './firebase-setup.js';
+    import { db, auth, onAuthStateChanged, signInAnonymously, doc, getDoc, onSnapshot, collection, query, orderBy, limit, syncUserData, startAfter, signInWithEmailAndPassword, createUserWithEmailAndPassword, linkWithCredential, EmailAuthProvider } from './firebase-setup.js';
 
     let lbPage = 1;
     let isLastPage = false;
 
-    window.openAuthModal = () => document.getElementById('auth-modal').style.display = 'flex';
+    let authMode = 'login';
+    
+    window.openAuthModal = () => {
+        document.getElementById('auth-modal').style.display = 'flex';
+        if (auth.currentUser && !auth.currentUser.isAnonymous) {
+            document.getElementById('auth-login-card').style.display = 'none';
+            document.getElementById('auth-profile-card').style.display = 'block';
+        } else {
+            document.getElementById('auth-login-card').style.display = 'block';
+            document.getElementById('auth-profile-card').style.display = 'none';
+        }
+    };
+
     window.closeAuthModal = () => document.getElementById('auth-modal').style.display = 'none';
 
+    window.toggleAuthMode = () => {
+        authMode = authMode === 'login' ? 'signup' : 'login';
+        document.getElementById('auth-title').innerText = authMode === 'login' ? 'Login' : 'Create Account';
+        document.getElementById('auth-toggle').innerText = authMode === 'login' ? 'No account? Create one' : 'Already have an account? Login';
+        document.getElementById('auth-action-btn').innerText = authMode === 'login' ? 'Login' : 'Create Account';
+        document.getElementById('auth-display-name').style.display = authMode === 'login' ? 'none' : 'block';
+    };
+
+    window.handleAuth = async () => {
+        const email = document.getElementById('auth-email').value;
+        const pass = document.getElementById('auth-password').value;
+        const name = document.getElementById('auth-display-name').value;
+        
+        if (!email || !pass) return alert("Please fill email and password.");
+        if (authMode === 'signup' && !name) return alert("Please enter a leaderboard name.");
+        
+        try {
+            if (authMode === 'login') {
+                await signInWithEmailAndPassword(auth, email, pass);
+            } else {
+                const credential = EmailAuthProvider.credential(email, pass);
+                if (auth.currentUser && auth.currentUser.isAnonymous) {
+                    await linkWithCredential(auth.currentUser, credential);
+                } else {
+                    await createUserWithEmailAndPassword(auth, email, pass);
+                }
+                await syncUserData(auth.currentUser.uid, { displayName: name });
+            }
+            closeAuthModal();
+            alert(authMode === 'login' ? "Logged in successfully!" : "Account created successfully!");
+        } catch (e) { alert(e.message); }
+    };
+
     window.updateUsername = async () => {
-        const newName = document.getElementById('auth-display-name').value;
+        const newName = document.getElementById('profile-display-name').value;
         if (!newName) return alert("Please enter a username.");
         try {
             await syncUserData(auth.currentUser.uid, { displayName: newName });
@@ -4770,7 +4828,7 @@
         
         if (docSnap.exists()) {
             const userData = docSnap.data();
-            document.getElementById('auth-display-name').value = userData.displayName || '';
+            document.getElementById('profile-display-name').value = userData.displayName || '';
         } else {
             const name = prompt("Welcome! Enter your leaderboard name:");
             if (name) {
