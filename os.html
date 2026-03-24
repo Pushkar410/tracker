@@ -233,6 +233,20 @@
       max-width: 500px
     }
 
+    /* Leaderboard Styles */
+    .lb-card { background: linear-gradient(135deg, #0f0f0f 0%, #0a0a0a 100%); border: 1px solid #1a1a1a; border-radius: 12px; padding: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); margin-top: 30px; border: 1px solid rgba(255,255,255,0.05); }
+    .lb-title { font-size: 1.2rem; font-weight: 600; color: #fff; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
+    .lb-list { display: flex; flex-direction: column; gap: 6px; }
+    .lb-header { display: grid; grid-template-columns: 50px 1fr 100px; padding: 12px; font-size: 0.75rem; text-transform: uppercase; color: #666; border-bottom: 1px solid rgba(255,255,255,0.1); letter-spacing: 1px; }
+    .lb-row { display: grid; grid-template-columns: 50px 1fr 100px; padding: 14px 12px; border-radius: 8px; align-items: center; transition: 0.3s; border: 1px solid transparent; }
+    .lb-row:hover { background: rgba(255,255,255,0.03); border-color: rgba(255,140,0,0.2); }
+    .lb-row.me { background: rgba(255, 140, 0, 0.08); border: 1px solid rgba(255, 140, 0, 0.3); }
+    .lb-rank { font-weight: 800; color: #444; }
+    .lb-row.me .lb-rank { color: #ff8c00; }
+    .lb-name { font-weight: 500; font-size: 14px; }
+    .lb-points { text-align: right; font-weight: 800; color: #ff8c00; font-size: 1.1rem; }
+    #leaderboard-section { max-width: 900px; margin: 0 auto; margin-bottom: 40px; padding: 0 28px; }
+
     /* ═══ PROGRESS DASHBOARD ═══ */
     .dash {
       max-width: 900px;
@@ -306,6 +320,54 @@
       overflow: hidden;
       margin-bottom: 6px
     }
+
+    /* Segmentation Bar Styles */
+    .seg-bar {
+      display: flex;
+      height: 14px;
+      border-radius: 7px;
+      overflow: hidden;
+      margin-top: 24px;
+      background: var(--s3);
+      box-shadow: inset 0 1px 3px rgba(0,0,0,0.5);
+    }
+    .seg-done { background: #4caf50; transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1); }
+    .seg-rev { background: #ff9800; transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1); }
+    .seg-rem { background: #666; transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1); }
+    
+    .seg-labels {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 10px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: var(--text3);
+      padding: 0 4px;
+    }
+    .seg-label-item { display: flex; align-items: center; gap: 6px; }
+    .seg-dot { width: 10px; height: 10px; border-radius: 50%; box-shadow: 0 0 5px rgba(0,0,0,0.5); }
+    .seg-dot.d { background: #4caf50; }
+    .seg-dot.r { background: #ff9800; }
+    .seg-dot.p { background: #666; }
+    
+    /* Pagination Styles */
+    .lb-nav { display: flex; justify-content: space-between; align-items: center; margin-top: 20px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.05); }
+    .lb-nav-btn { background: rgba(255,255,255,0.03); border: 1px solid var(--border); color: #fff; padding: 6px 14px; border-radius: 6px; cursor: pointer; font-size: 0.75rem; transition: 0.2s; font-weight: 600; }
+    .lb-nav-btn:hover:not(:disabled) { background: var(--blue); border-color: var(--blue-ll); }
+    .lb-nav-btn:disabled { opacity: 0.2; cursor: not-allowed; }
+    .lb-page-info { font-size: 0.75rem; color: var(--text3); font-weight: 600; letter-spacing: 0.5px; }
+
+    /* Login Modal Styles */
+    .auth-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 10000; display: none; align-items: center; justify-content: center; backdrop-filter: blur(8px); }
+    .auth-card { background: var(--s1); border: 1px solid var(--border); border-radius: 12px; padding: 40px; width: 400px; box-shadow: 0 20px 50px rgba(0,0,0,0.5); text-align: center; }
+    .auth-title { font-size: 1.5rem; font-weight: 700; color: #fff; margin-bottom: 8px; }
+    .auth-sub { font-size: 0.9rem; color: var(--text3); margin-bottom: 30px; }
+    .auth-input { width: 100%; background: var(--s2); border: 1px solid var(--border); border-radius: 6px; padding: 12px; color: #fff; margin-bottom: 12px; outline: none; transition: 0.2s; }
+    .auth-input:focus { border-color: var(--blue); }
+    .auth-btn { width: 100%; background: var(--blue-g); color: #fff; border: 1px solid var(--blue-ll); border-radius: 6px; padding: 12px; font-weight: 700; cursor: pointer; margin-top: 10px; transition: 0.2s; }
+    .auth-btn:hover { background: var(--blue); }
+    .auth-link { font-size: 0.8rem; color: var(--blue-ll); cursor: pointer; margin-top: 20px; display: block; }
+    .auth-close { position: absolute; top: 20px; right: 20px; color: var(--text3); cursor: pointer; font-size: 1.5rem; }
 
     .prog-bar {
       height: 100%;
@@ -2166,6 +2228,7 @@
       <button class="hdr-btn active" onclick="showView('study')">📚 Study</button>
       <button class="hdr-btn" onclick="showView('analytics')">📊 Analytics</button>
       <button class="hdr-btn" onclick="showView('interview')">🎯 Interview</button>
+      <button class="hdr-btn" id="auth-btn" onclick="openAuthModal()" style="border-color:var(--blue);color:var(--blue-ll)">👤 Account</button>
     </div>
   </header>
 
@@ -2210,6 +2273,18 @@
       </div>
       <div class="prog-text" id="progText">0 of 14 completed</div>
       <div class="day-pills" id="dayPills"></div>
+
+      <!-- Segmentation Bar -->
+      <div class="seg-bar" style="margin-top: 20px;">
+        <div id="seg-done-main" class="seg-done" style="width: 0%"></div>
+        <div id="seg-rev-main" class="seg-rev" style="width: 0%"></div>
+        <div id="seg-rem-main" class="seg-rem" style="width: 100%"></div>
+      </div>
+      <div class="seg-labels">
+        <div class="seg-label-item"><span class="seg-dot d"></span><span id="seg-lbl-done-main">0 Done</span></div>
+        <div class="seg-label-item"><span class="seg-dot r"></span><span id="seg-lbl-rev-main">0 Revise</span></div>
+        <div class="seg-label-item"><span class="seg-dot p"></span><span id="seg-lbl-rem-main">14 Left</span></div>
+      </div>
     </div>
 
     <div class="wrap" id="studyContent">
@@ -2361,8 +2436,7 @@
 
           <!-- MCQ DROPDOWN -->
           <details class="day-details mcq-details" id="dd-mcq-1">
-            <summary class="day-summary mcq-summary">⚡ Quick MCQ Test — Day 1 <span class="mcq-score"
-                id="score-1">Score: —</span></summary>
+            <summary class="day-summary mcq-summary">⚡ Quick MCQ Test — Day 1</summary>
             <div class="mcq-section" id="mcq-1">
               <div id="mcq-body-1"></div>
               <button class="mcq-submit" onclick="submitMCQ(1)">Submit Answers</button>
@@ -2686,6 +2760,33 @@
         </div>
       </div>
 
+      <!-- Segmentation Bar -->
+      <div style="background:var(--s1);border:1px solid var(--border);border-radius:var(--r);padding:24px;margin-bottom:20px;border: 1px solid rgba(255,255,255,0.03);">
+        <div class="dash-title" style="margin-bottom:4px">🎯 Mastery Status</div>
+        <p style="color:var(--text3);font-size:0.8rem;margin-bottom:16px">Your overall OS preparation breakdown</p>
+        
+        <div class="seg-bar">
+          <div id="seg-done-analytics" class="seg-done" style="width: 0%"></div>
+          <div id="seg-rev-analytics" class="seg-rev" style="width: 0%"></div>
+          <div id="seg-rem-analytics" class="seg-rem" style="width: 100%"></div>
+        </div>
+        
+        <div class="seg-labels">
+          <div class="seg-label-item">
+            <span class="seg-dot d"></span>
+            <span id="seg-lbl-done-analytics">0 Done</span>
+          </div>
+          <div class="seg-label-item">
+            <span class="seg-dot r"></span>
+            <span id="seg-lbl-rev-analytics">0 Revision</span>
+          </div>
+          <div class="seg-label-item">
+            <span class="seg-dot p"></span>
+            <span id="seg-lbl-rem-analytics">14 Left</span>
+          </div>
+        </div>
+      </div>
+
       <div class="charts-grid">
         <div class="chart-card">
           <h3>Study Progress</h3>
@@ -2873,6 +2974,26 @@
     </div>
   </div>
 
+  <!-- GLOBAL LEADERBOARD -->
+  <div id="leaderboard-section">
+    <div class="lb-card">
+      <div class="lb-title">🏆 Global Leaderboard</div>
+      <div class="lb-header">
+        <span>Rank</span>
+        <span>User</span>
+        <span style="text-align: right;">Points</span>
+      </div>
+      <div class="lb-list" id="leaderboardList">
+        <div style="text-align: center; padding: 30px; color: #444;">Syncing with Global Database...</div>
+      </div>
+      <div class="lb-nav">
+        <button class="lb-nav-btn" id="lb-prev" onclick="changeLBPage(-1)" disabled>← Previous 10</button>
+        <span class="lb-page-info" id="lb-page-info">Page 1</span>
+        <button class="lb-nav-btn" id="lb-next" onclick="changeLBPage(1)">Next 10 →</button>
+      </div>
+    </div>
+  </div>
+
   <script>
     // ══════════════════════════════════════════════════════════
     const STATE = {
@@ -2884,6 +3005,12 @@
       localStorage.setItem('os_days', JSON.stringify(STATE.days)); 
       localStorage.setItem('os_mcq', JSON.stringify(STATE.mcq)); 
       localStorage.setItem('os_mock', JSON.stringify(STATE.mock)); 
+      if (window.firebaseSync) {
+        window.firebaseSync({
+          os_days: STATE.days,
+          os_mock: STATE.mock
+        });
+      }
     }
 
     // ══════════════════════════════════════════════════════════
@@ -4536,11 +4663,128 @@
         const btn = document.getElementById(s + '-' + n);
         if (btn) btn.classList.add('active');
       });
-      updateDash();
+      updateDash(); if (window.updateOSMasteryBar) window.updateOSMasteryBar();
       // open day 1 by default
       toggleAcc(1);
       // draw initial pie with empty data
       setTimeout(() => renderPieCharts(), 100);
+    });
+  </script>
+  <div class="auth-overlay" id="auth-modal">
+    <div class="auth-close" onclick="closeAuthModal()">×</div>
+    <div class="auth-card">
+      <div class="auth-title" id="auth-title">Profile</div>
+      <div class="auth-sub" id="auth-sub">Set your global leaderboard name</div>
+      <div id="auth-profile-section" style="margin-bottom: 20px;">
+          <input type="text" id="auth-display-name" class="auth-input" placeholder="Enter username">
+          <button class="auth-btn" style="width: 100%; margin-top: 10px;" onclick="updateUsername()">Save Username</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { db, auth, onAuthStateChanged, signInAnonymously, doc, getDoc, onSnapshot, collection, query, orderBy, limit, syncUserData, startAfter } from './firebase-setup.js';
+
+    let lbPage = 1;
+    let isLastPage = false;
+
+    window.openAuthModal = () => document.getElementById('auth-modal').style.display = 'flex';
+    window.closeAuthModal = () => document.getElementById('auth-modal').style.display = 'none';
+
+    window.updateUsername = async () => {
+        const newName = document.getElementById('auth-display-name').value;
+        if (!newName) return alert("Please enter a username.");
+        try {
+            await syncUserData(auth.currentUser.uid, { displayName: newName });
+            alert("Username updated!");
+            closeAuthModal();
+        } catch (e) { alert(e.message); }
+    };
+
+    window.updateOSMasteryBar = () => {
+        if (!window.STATE?.days) return;
+        const total = 14;
+        const done = Object.values(STATE.days).filter(v => v === 'done').length;
+        const rev = Object.values(STATE.days).filter(v => v === 'rev').length;
+        const rem = total - done - rev;
+        const dPct = (done / total) * 100;
+        const rPct = (rev / total) * 100;
+        const pPct = (rem / total) * 100;
+
+        ['main', 'analytics'].forEach(suffix => {
+            const dEl = document.getElementById(`seg-done-${suffix}`);
+            const rEl = document.getElementById(`seg-rev-${suffix}`);
+            const pEl = document.getElementById(`seg-rem-${suffix}`);
+            if (dEl) dEl.style.width = dPct + '%';
+            if (rEl) rEl.style.width = rPct + '%';
+            if (pEl) pEl.style.width = pPct + '%';
+            const dLbl = document.getElementById(`seg-lbl-done-${suffix}`);
+            const rLbl = document.getElementById(`seg-lbl-rev-${suffix}`);
+            const pLbl = document.getElementById(`seg-lbl-rem-${suffix}`);
+            if (dLbl) dLbl.innerText = `${done} Done`;
+            if (rLbl) rLbl.innerText = `${rev} Revise`;
+            if (pLbl) pLbl.innerText = `${rem} Rem`;
+        });
+    };
+
+    window.changeLBPage = (dir) => {
+        if (dir === 1 && isLastPage) return;
+        if (dir === -1 && lbPage === 1) return;
+        lbPage += dir;
+        fetchLeaderboard();
+    };
+
+    function fetchLeaderboard() {
+        const lbContainer = document.getElementById('leaderboardList');
+        const q = query(collection(db, "users"), orderBy("totalPoints", "desc"), limit(100));
+        onSnapshot(q, (snapshot) => {
+            const allUsers = [];
+            snapshot.forEach(doc => allUsers.push({ id: doc.id, ...doc.data() }));
+            const start = (lbPage - 1) * 10;
+            const pageUsers = allUsers.slice(start, start + 10);
+            isLastPage = allUsers.length <= (lbPage * 10);
+            document.getElementById('lb-next').disabled = isLastPage;
+            document.getElementById('lb-prev').disabled = lbPage === 1;
+            document.getElementById('lb-page-info').innerText = `Page ${lbPage}`;
+            let html = '';
+            pageUsers.forEach((user, index) => {
+                const rank = start + index + 1;
+                const isMe = user.id === auth.currentUser?.uid;
+                html += `<div class="lb-row ${isMe ? 'me' : ''}">
+                    <span class="lb-rank">#${rank}</span>
+                    <span class="lb-name">${user.displayName || 'Anonymous'} ${isMe ? '(You)' : ''}</span>
+                    <span class="lb-points">${user.totalPoints || 0}</span>
+                </div>`;
+            });
+            lbContainer.innerHTML = html || '<div style="padding:20px;text-align:center;color:#444">No more users</div>';
+        });
+    }
+
+    onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        window.currentUser = user;
+        document.getElementById('auth-btn').innerText = user.isAnonymous ? '👤 Guest' : '👤 ' + (user.email.split('@')[0]);
+        
+        const userRef = doc(db, 'users', user.uid);
+        const docSnap = await getDoc(userRef);
+        
+        if (docSnap.exists()) {
+            const userData = docSnap.data();
+            document.getElementById('auth-display-name').value = userData.displayName || '';
+        } else {
+            const name = prompt("Welcome! Enter your leaderboard name:");
+            if (name) {
+                syncUserData(user.uid, { 
+                    displayName: name,
+                    os_days: STATE.days,
+                    os_mock: STATE.mock || {}
+                });
+            }
+        }
+        window.firebaseSync = (update) => syncUserData(user.uid, update);
+        fetchLeaderboard();
+        window.updateOSMasteryBar();
+      } else { signInAnonymously(auth); }
     });
   </script>
 </body>
